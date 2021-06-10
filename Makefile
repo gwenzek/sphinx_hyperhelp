@@ -15,7 +15,7 @@ all: test build
 build: build/$(TARGET_NAME)/hyperhelp
 
 build/$(TARGET_NAME)/hyperhelp: repos/$(TARGET_NAME)
-	poetry run python -m sphinx -b hyperhelp $</doc $(@D)
+	poetry run python -m sphinx -P -b hyperhelp $</doc $(@D)
 	ln -s `realpath $(@D)` "$(ST_PACKAGES)/$(TARGET_NAME)"
 	# TODO: open the documentation in sublime
 
@@ -24,7 +24,7 @@ repos/$(TARGET_NAME):
 
 clean:
 	rm -r build/$(TARGET_NAME)
-	rm $(ST_PACKAGES)/$(TARGET_NAME)
+	rm "$(ST_PACKAGES)/$(TARGET_NAME)"
 
 
 # Command for developers working on sphinx_hyperhelp

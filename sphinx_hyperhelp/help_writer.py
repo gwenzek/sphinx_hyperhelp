@@ -43,6 +43,9 @@ class HyperHelpTranslator(TextTranslator):
         super().visit_document(node)
         assert self.helpfile is None
         self.helpfile = self.builder.add_help_file()
+        # if self.builder.current_docname == "latex":
+        #     breakpoint()
+
 
     def depart_document(self, node: Element) -> None:
         super().depart_document(node)
@@ -65,11 +68,11 @@ class HyperHelpTranslator(TextTranslator):
         result: List[Tuple[int, List[str]]] = []
         toformat: List[str] = []
 
-        def do_format() -> None:
+        def do_format(maxindent: int) -> None:
             if not toformat:
                 return
             if wrap:
-                res = self.wrap("".join(toformat), width=self.maxwidth - maxindent)
+                res = self.wrap("".join(toformat), width=self.maxwidth)
             else:
                 res = "".join(toformat).splitlines()
             if end:
@@ -80,10 +83,10 @@ class HyperHelpTranslator(TextTranslator):
             if itemindent == -1:
                 toformat.append(item)  # type: ignore
             else:
-                do_format()
+                do_format(maxindent)
                 result.append((indent + itemindent, item))  # type: ignore
                 toformat = []
-        do_format()
+        do_format(maxindent)
         if first is not None and result:
             # insert prefix into first line (ex. *, [1], See also, etc.)
             newindent = result[0][0] - indent
@@ -119,6 +122,24 @@ class HyperHelpTranslator(TextTranslator):
     def split(self, text: str) -> List[str]:
         return self.get_wrapper()._split(text)
 
+    def visit_desc_signature(self, node: Element) -> None:
+        super().visit_desc_signature(node)
+        if not node["ids"]:
+            return
+
+        topic = node["ids"][0]
+        self.helpfile.add_topic(topic)
+        self.add_text(f"*{topic}:")
+
+    def depart_desc_signature(self, node: Element) -> None:
+        topic = node["ids"]
+        if topic:
+            self.add_text("*")
+        super().depart_desc_signature(node)
+
+    visit_definition_list = visit_desc_signature
+    depart_definition_list = depart_desc_signature
+
     def visit_literal_block(self, node: Element, language: str = ""):
         if not language:
             language = node["classes"][1] if "code" in node["classes"] else ""
@@ -139,13 +160,18 @@ class HyperHelpTranslator(TextTranslator):
         super().visit_block_quote(node)
         self.add_text("> ")
 
-    def add_node_as_topic(self, node: Element) -> Optional[str]:
+    def add_title_as_topic(self, node: Element) -> Optional[str]:
         assert self.helpfile
         parent = node.parent
         if not parent["ids"]:
             logger.debug(f"No ids for node: {parent} in {self.helpfile}")
             return None
-        return self.helpfile.add_topic(parent["ids"][0])
+        topic = parent["ids"][0]
+        # TODO: figure out how to create unique link to titles.
+        # This generates duplicate topics. Is it because of TOC ?
+        # topic = "/".join((self.helpfile.module + ".txt", topic))
+        self.helpfile.add_topic(topic)
+        return topic
 
     def visit_title(self, node: Element):
         # Note: not calling super
@@ -169,7 +195,7 @@ class HyperHelpTranslator(TextTranslator):
             raise nodes.SkipNode
 
         # TODO: reuse topic name from rst
-        topic = self.add_node_as_topic(node)
+        topic = self.add_title_as_topic(node)
         if topic:
             self.add_text(f"{lvl * '#'} {topic}: ")
         else:
@@ -195,7 +221,7 @@ class HyperHelpTranslator(TextTranslator):
         current_doc = Path(self.builder.current_docname)
 
         topic = uri2topic(current_doc, uri, node.get("refid"))
-        self.builder.links.add(topic)
+        self.builder.links[topic] = current_doc
         assert "/../" not in topic
         assert "#" not in topic
         return topic
@@ -230,7 +256,7 @@ class HyperHelpWriter(TextWriter):
 
 
 def uri2topic(current_doc: Path, refuri: str, refid: Optional[str] = None):
-    print(f"{current_doc=}, {refuri=}, {refid=}")
+    # print(f"{current_doc=}, {refuri=}, {refid=}")
     if refuri.startswith("#"):
         # this seems to be a global ID
         return refuri[1:]
@@ -256,7 +282,7 @@ def uri2topic(current_doc: Path, refuri: str, refid: Optional[str] = None):
     # if refid:
     #     topic += "/" + refid
 
-    print(topic)
+    # print(topic)
     # assert "/../" not in topic
     # assert "#" not in topic
     return topic

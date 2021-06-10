@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterator, Set, Tuple
 
@@ -29,7 +30,7 @@ class HyperHelpBuilder(TextBuilder):
 
     current_docname: str = ""
     index: HelpIndex = None  # type: ignore
-    links: Set[str] = set()
+    links: dict[str, str] = {}
 
     def prepare_writing(self, docnames):
         self.writer = HyperHelpWriter(self)
@@ -39,7 +40,7 @@ class HyperHelpBuilder(TextBuilder):
         #     {k: v[0] for k, v in config.values.items() if not callable(v[0]) and v[0]}
         # )
         self.index = HelpIndex(config.project, description, Path(self.outdir))
-        self.topics = set()
+        self.links = {}
 
     # TODO: edit reload existing index, and override get_outdated_docs
     # to keep unchanged files in the index
@@ -52,26 +53,50 @@ class HyperHelpBuilder(TextBuilder):
         if not valid:
             logger.error("The index seems invalid, some topics may be missing")
 
-
     def validate(self) -> bool:
-        valid = True
         resolved_topics: dict[str, str] = {}
-        for file in self.index.help_files.values():
-            for topic in file.topics:
-                name = topic.topic
-                if name in resolved_topics:
-                    logger.warning(
-                        f"Conflict for topic #{name} in files {resolved_topics['name']} and {file.module}"
-                    )
-                    valid = False
-                    continue
-                resolved_topics[name] = file.module
+        all_topics = [
+            (hf.module, t.topic)
+            for hf in self.index.help_files.values()
+            for t in hf.topics
+        ]
+        conflicts_set: dict[str, list] = defaultdict(set)
+        for file, topic in all_topics:
+            conflict = resolved_topics.get(topic)
+            if conflict:
+                conflicts_set[topic].add(conflict)
+                conflicts_set[topic].add(file)
+                continue
+            resolved_topics[topic] = file
 
-        for topic_name in self.links:
-            if topic_name not in resolved_topics:
-                logger.warning(f"Unresolved topic: {topic_name}")
+        conflicts = []
+        unresolveds = []
+        for topic, file in self.links.items():
+            if topic not in resolved_topics:
+                logger.warning(f"Unresolved topic: {topic} in file {file}")
+                unresolveds.append(topic)
+
+            if topic in conflicts_set:
+                conflicting = conflicts_set[topic]
+                logger.warning(
+                    f"In file {file}, topic #{topic} is ambiguous among those files: {', '.join(conflicting)}"
+                )
+                conflicts.append(f"#{topic} - {', '.join(conflicting)}")
+
+        (Path(self.outdir) / "unresolved.txt").write_text("\n".join(unresolveds))
+        (Path(self.outdir) / "conflicts.txt").write_text("\n".join(conflicts))
+
+        total_links = len(self.links)
+        valid = True
+        if len(unresolveds) > 0:
+            logger.error(f"Found {len(unresolveds)} / {total_links} unresolved topics")
+            valid = False
+
+        if len(conflicts) > 0:
+            logger.error(f"Found {len(conflicts)} / {total_links} ambiguous topics")
+            valid = False
+
         return valid
-
 
     def add_help_file(self) -> HelpFile:
         docname = self.current_docname
