@@ -41,6 +41,11 @@ some of the TextTranslator methods.
 * Use unicode to render maths: "E = mc^2" -> "E = mc²"
 * images using phantoms ? this should be an HyperHelp feature
 
-## Credits
+## License
+
+This plugin is released under the [BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause).
 
 This plugin is mostly based on the builtin [Sphinx text builder](https://www.sphinx-doc.org/en/master/usage/builders/index.html?highlight=text%20builder#sphinx.builders.text.TextBuilder).
+
+Some of the code is only a slight modification of Sphinx.
+[Sphinx license](./LICENSE#17)
