@@ -1,0 +1,23 @@
+# Work folder
+
+# build/
+# repos/
+
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# Environments
+.env
+.venv
+env
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# caches
+.mypy_cache/
+
