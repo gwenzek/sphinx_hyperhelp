@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 import sphinx.testing.util
 from sphinx.testing.path import path as SphinxPath
 
@@ -42,4 +41,6 @@ def file_builder(app):
 
 @pytest.fixture()
 def load_help_index(tmp_path: Path):
-    return lambda: json.loads((tmp_path / "_build/hyperhelp/hyperhelp.json").read_text())
+    return lambda: json.loads(
+        (tmp_path / "_build/hyperhelp/hyperhelp.json").read_text()
+    )

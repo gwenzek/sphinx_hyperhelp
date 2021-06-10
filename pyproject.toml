@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "sphinx_hyperhelp"
+version = "0.1.0"
+description = "Builder for Sphinx documentation, to the HyperHelp format, for Sublime Text reading"
+authors = ["Guillaume Wenzek"]
+license = "BSD-3-Clause"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Sphinx = "^4.0.2"
+sphinxcontrib-websupport = "^1.2.4"
+
+[tool.poetry.dev-dependencies]
+black = "^21.5b2"
+isort = "^5.8.0"
+pytest = "^6.2.4"
+
+[tool.poetry.plugins."sphinx.builders"]
+"hyperhelp" = "sphinx_hyperhelp"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

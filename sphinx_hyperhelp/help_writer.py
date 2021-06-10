@@ -1,15 +1,12 @@
 import logging
 import re
-from typing import Tuple
-from typing import List
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
-
+from typing import List, Optional, Tuple
 
 from docutils import nodes
 from docutils.nodes import Element, Node, Text
-from sphinx.writers.text import TextTranslator, TextWriter, TextWrapper
+from sphinx.writers.text import TextTranslator, TextWrapper, TextWriter
 
 from .hyperhelp import HelpExternal, HelpFile
 
@@ -139,7 +136,7 @@ class HyperHelpTranslator(TextTranslator):
 
     def visit_block_quote(self, node):
         # TODO: prefix ">" on all lines
-        super.visit_block_quote()
+        super().visit_block_quote(node)
         self.add_text("> ")
 
     def add_node_as_topic(self, node: Element) -> Optional[str]:
@@ -181,48 +178,43 @@ class HyperHelpTranslator(TextTranslator):
     def depart_title(self, node: Element):
         pass
 
-    def _refuri2http(self, node):
+    def uri2topic(self, node) -> Optional[str]:
         # Replace 'refuri' in reference with HTTP address, if possible
         # None for no possible address
+        uri = node.get("refuri")
+        if not uri:
+            return None
         external = not node.get("internal", False)
 
         if external:
-            url = node.get("refuri")
-            if not url:
-                raise nodes.SkipNode
-            topic = url.split("://")[-1].strip("/")
-            # TODO? ping the url to fetch page title and description ?
+            topic = uri.split("://")[-1].strip("/")
+            # TODO? ping the uri to fetch page title and description ?
             # TODO: prevent duplicate
-            self.builder.index.externals[url] = HelpExternal(url, topic, url)
+            self.builder.index.externals[uri] = HelpExternal(uri, topic, uri)
             return topic
         current_doc = Path(self.builder.current_docname)
 
-        refuri = current_doc.parent / node.get("refuri", current_doc.name)
-        # Resolve ".." in refuri, but still keep a path relative to the root.
-        # TODO: this should be moved to the HelpFile
-        topic = str(refuri.resolve().relative_to(Path(".").resolve()))
-        # TODO: figure who is adding .md to the docname.
-        breakpoint()
-        if topic.endswith(".md"):
-            topic = topic[:-3] + ".txt"
-        if ".md#" in topic:
-            topic = topic.replace(".md#", ".txt/")
-        if "refid" in node:
-            topic += "/" + node["refid"]
-
-        print(topic)
+        topic = uri2topic(current_doc, uri, node.get("refid"))
+        self.builder.links.add(topic)
         assert "/../" not in topic
         assert "#" not in topic
-        # TODO: remove reference to markdown_http_base
         return topic
 
     def visit_reference(self, node: Element):
         # If no target possible, pass through.
-        topic = self._refuri2http(node)
+        topic = self.uri2topic(node)
         if topic is None:
             return
         text = "".join((c.astext() for c in node.children)).replace("|", "/")
         self.add_text(f"|:{topic}:{text}|")
+        raise nodes.SkipNode
+
+    def unknown_visit(self, node):
+        # TODO: we shouldn't need this.
+        # It only triggers when running make build, but not make test.
+        node_type = node.__class__.__name__
+        # self.document.reporter.warning(f"The {node_type} element not supported: {node.astext()}")
+        self.document.reporter.warning(f"The {node_type} element not supported")
         raise nodes.SkipNode
 
 
@@ -235,3 +227,36 @@ class HyperHelpWriter(TextWriter):
     """Final translated form of `document`."""
 
     translator_class = HyperHelpTranslator
+
+
+def uri2topic(current_doc: Path, refuri: str, refid: Optional[str] = None):
+    print(f"{current_doc=}, {refuri=}, {refid=}")
+    if refuri.startswith("#"):
+        # this seems to be a global ID
+        return refuri[1:]
+
+    breakpoint()
+    if "#" in refuri:
+        base_uri, anchor = refuri.split("#")
+        if anchor and refid:
+            breakpoint()
+        refid = anchor
+
+    if not base_uri:
+        base_uri = str(current_doc)
+
+    topic = "/".join((base_uri, refid))
+    # else:
+    #     refuri = str(current_doc.parent / refuri)
+    # # Resolve ".." in refuri, but still keep a path relative to the root.
+    # # TODO: this should be moved to the HelpFile
+    # topic = str(Path(refuri).resolve().relative_to(Path(".").resolve()))
+    # # TODO: figure who is adding .md to the docname.
+
+    # if refid:
+    #     topic += "/" + refid
+
+    print(topic)
+    # assert "/../" not in topic
+    # assert "#" not in topic
+    return topic

@@ -1,7 +1,7 @@
 # Work folder
 
-# build/
-# repos/
+/repos/
+/build/
 
 # Byte-compiled
 __pycache__/
@@ -20,4 +20,3 @@ venv.bak/
 
 # caches
 .mypy_cache/
-
