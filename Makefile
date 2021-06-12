@@ -19,6 +19,12 @@ build/$(TARGET_NAME)/hyperhelp: repos/$(TARGET_NAME)
 	ln -s `realpath $(@D)` "$(ST_PACKAGES)/$(TARGET_NAME)"
 	# TODO: open the documentation in sublime
 
+build_html: build/$(TARGET_NAME)/html
+
+build/$(TARGET_NAME)/html: repos/$(TARGET_NAME)
+	python -m sphinx -P -b html $</doc $@
+
+
 repos/$(TARGET_NAME):
 	git clone --depth 2 --branch $(TARGET_VERSION) $(TARGET_REPO) $@
 

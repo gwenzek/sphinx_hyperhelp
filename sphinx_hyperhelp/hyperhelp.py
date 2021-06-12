@@ -32,7 +32,7 @@ class HelpFile:
         return [self.description] + [t.as_json() for t in self.topics]  # type: ignore
 
     def add_topic(self, name: str) -> None:
-        self.topics.append(HelpTopic(name, name))
+        self.topics.append(HelpTopic(name, name, aliases=[f"{self.module}/{name}"]))
 
     def add_description(self, description: str) -> None:
         assert not self.description, f"{self} already got a description"

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class HyperHelpBuilder(TextBuilder):
     name = "hyperhelp"
-    format = "hyperhelp"
+    format = "text"
     epilog = __(
         "The hyperhelp files are in %(outdir)s, index at %(outdir)s/hyperhelp.json"
     )
@@ -47,6 +47,14 @@ class HyperHelpBuilder(TextBuilder):
     def get_outdated_docs(self) -> Iterator[str]:
         yield from self.env.found_docs
 
+    def get_target_uri(self, docname: str, typ: str = None) -> str:
+        return docname
+
+    def get_relative_uri(self, from_: str, to: str, typ: str = None) -> str:
+        # ignore source path, Hyperhelp only has absolute paths
+        # This is used when generating toctree.
+        return self.get_target_uri(to, typ)
+
     def finish(self) -> None:
         self.index.save()
         valid = self.validate()
@@ -54,20 +62,23 @@ class HyperHelpBuilder(TextBuilder):
             logger.error("The index seems invalid, some topics may be missing")
 
     def validate(self) -> bool:
-        resolved_topics: dict[str, str] = {}
         all_topics = [
-            (hf.module, t.topic)
+            (hf.module, help_topic)
             for hf in self.index.help_files.values()
-            for t in hf.topics
+            for help_topic in hf.topics
         ]
-        conflicts_set: dict[str, list] = defaultdict(set)
-        for file, topic in all_topics:
+        resolved_topics: dict[str, str] = {}
+        conflicts_set: dict[str, set[str]] = defaultdict(set)
+        for file, help_topic in all_topics:
+            topic = help_topic.topic
             conflict = resolved_topics.get(topic)
             if conflict:
                 conflicts_set[topic].add(conflict)
                 conflicts_set[topic].add(file)
                 continue
             resolved_topics[topic] = file
+            for alias in help_topic.aliases:
+                resolved_topics[alias] = file
 
         conflicts = []
         unresolveds = []
@@ -81,7 +92,7 @@ class HyperHelpBuilder(TextBuilder):
                 logger.warning(
                     f"In file {file}, topic #{topic} is ambiguous among those files: {', '.join(conflicting)}"
                 )
-                conflicts.append(f"#{topic} - {', '.join(conflicting)}")
+                conflicts.append(f"{file}#{topic} - {', '.join(conflicting)}")
 
         (Path(self.outdir) / "unresolved.txt").write_text("\n".join(unresolveds))
         (Path(self.outdir) / "conflicts.txt").write_text("\n".join(conflicts))
@@ -119,5 +130,5 @@ def setup(app: Sphinx) -> Dict[str, Any]:
     return {
         "version": "builtin",
         "parallel_read_safe": True,
-        "parallel_write_safe": True,
+        "parallel_write_safe": False,
     }

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 import re
 from datetime import datetime
@@ -12,6 +13,11 @@ from .hyperhelp import HelpExternal, HelpFile
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+DEBUG_DOCS: list[str] = []
+DEBUG_TOPICS: list[str] = []
+# DEBUG_DOCS = ["usage/restructuredtext/basics"]
+# DEBUG_TOPICS = ["roles"]
 
 
 def long_re(**named_parts: str):
@@ -41,11 +47,11 @@ class HyperHelpTranslator(TextTranslator):
 
     def visit_document(self, node: Element) -> None:
         super().visit_document(node)
+        print(node["source"])
         assert self.helpfile is None
         self.helpfile = self.builder.add_help_file()
-        # if self.builder.current_docname == "latex":
-        #     breakpoint()
-
+        if self.builder.current_docname in DEBUG_DOCS:
+            breakpoint()
 
     def depart_document(self, node: Element) -> None:
         super().depart_document(node)
@@ -128,6 +134,8 @@ class HyperHelpTranslator(TextTranslator):
             return
 
         topic = node["ids"][0]
+        if topic in DEBUG_TOPICS:
+            breakpoint()
         self.helpfile.add_topic(topic)
         self.add_text(f"*{topic}:")
 
@@ -167,9 +175,10 @@ class HyperHelpTranslator(TextTranslator):
             logger.debug(f"No ids for node: {parent} in {self.helpfile}")
             return None
         topic = parent["ids"][0]
+        if topic in DEBUG_TOPICS:
+            breakpoint()
         # TODO: figure out how to create unique link to titles.
-        # This generates duplicate topics. Is it because of TOC ?
-        # topic = "/".join((self.helpfile.module + ".txt", topic))
+        # Currently we generates ambiguous topics. Is it because of TOC ?
         self.helpfile.add_topic(topic)
         return topic
 
@@ -208,11 +217,11 @@ class HyperHelpTranslator(TextTranslator):
         # Replace 'refuri' in reference with HTTP address, if possible
         # None for no possible address
         uri = node.get("refuri")
-        if not uri:
-            return None
-        external = not node.get("internal", False)
 
+        external = not node.get("internal", False)
         if external:
+            if not uri:
+                return None
             topic = uri.split("://")[-1].strip("/")
             # TODO? ping the uri to fetch page title and description ?
             # TODO: prevent duplicate
@@ -220,7 +229,21 @@ class HyperHelpTranslator(TextTranslator):
             return topic
         current_doc = Path(self.builder.current_docname)
 
-        topic = uri2topic(current_doc, uri, node.get("refid"))
+        if uri:
+            # this is a global ID
+            if uri.startswith("#"):
+                topic = uri[1:]
+            elif "#" in uri:
+                topic = uri.replace("#", "/")
+            else:
+                topic = uri
+        else:
+            topic = node.get("refid")
+        if not topic:
+            return None
+        if topic in DEBUG_TOPICS:
+            breakpoint()
+
         self.builder.links[topic] = current_doc
         assert "/../" not in topic
         assert "#" not in topic
@@ -253,36 +276,3 @@ class HyperHelpWriter(TextWriter):
     """Final translated form of `document`."""
 
     translator_class = HyperHelpTranslator
-
-
-def uri2topic(current_doc: Path, refuri: str, refid: Optional[str] = None):
-    # print(f"{current_doc=}, {refuri=}, {refid=}")
-    if refuri.startswith("#"):
-        # this seems to be a global ID
-        return refuri[1:]
-
-    breakpoint()
-    if "#" in refuri:
-        base_uri, anchor = refuri.split("#")
-        if anchor and refid:
-            breakpoint()
-        refid = anchor
-
-    if not base_uri:
-        base_uri = str(current_doc)
-
-    topic = "/".join((base_uri, refid))
-    # else:
-    #     refuri = str(current_doc.parent / refuri)
-    # # Resolve ".." in refuri, but still keep a path relative to the root.
-    # # TODO: this should be moved to the HelpFile
-    # topic = str(Path(refuri).resolve().relative_to(Path(".").resolve()))
-    # # TODO: figure who is adding .md to the docname.
-
-    # if refid:
-    #     topic += "/" + refid
-
-    # print(topic)
-    # assert "/../" not in topic
-    # assert "#" not in topic
-    return topic
