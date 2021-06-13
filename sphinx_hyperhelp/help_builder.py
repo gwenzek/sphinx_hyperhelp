@@ -85,7 +85,7 @@ class HyperHelpBuilder(TextBuilder):
         for topic, file in self.links.items():
             if topic not in resolved_topics:
                 logger.warning(f"Unresolved topic: {topic} in file {file}")
-                unresolveds.append(topic)
+                unresolveds.append(f"{topic} ({file})")
 
             if topic in conflicts_set:
                 conflicting = conflicts_set[topic]

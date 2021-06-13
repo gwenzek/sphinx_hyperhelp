@@ -16,8 +16,8 @@ logger.setLevel(logging.DEBUG)
 
 DEBUG_DOCS: list[str] = []
 DEBUG_TOPICS: list[str] = []
-# DEBUG_DOCS = ["usage/restructuredtext/basics"]
-# DEBUG_TOPICS = ["roles"]
+# DEBUG_DOCS = ["usage/restructuredtext/domains"]
+# DEBUG_TOPICS = ["cross-referencing-python-objects"]
 
 
 def long_re(**named_parts: str):
@@ -149,6 +149,7 @@ class HyperHelpTranslator(TextTranslator):
     depart_definition_list = depart_desc_signature
 
     def visit_literal_block(self, node: Element, language: str = ""):
+        super().visit_literal_block(node)
         if not language:
             language = node["classes"][1] if "code" in node["classes"] else ""
             if "language" in node:
@@ -157,6 +158,7 @@ class HyperHelpTranslator(TextTranslator):
 
     def depart_literal_block(self, node):
         self.add_text("```\n\n")
+        super().depart_literal_block(node)
 
     def visit_doctest_block(self, node):
         self.visit_literal_block(node, "python")
@@ -174,12 +176,17 @@ class HyperHelpTranslator(TextTranslator):
         if not parent["ids"]:
             logger.debug(f"No ids for node: {parent} in {self.helpfile}")
             return None
-        topic = parent["ids"][0]
-        if topic in DEBUG_TOPICS:
+
+        # TODO handle aliases. The node['ids'] may have more than one value
+        aliases = []
+        for topic in parent["ids"]:
+            aliases.append(topic)
+            aliases.append(self.builder.current_docname + "/" + topic)
+
+        if any(topic in DEBUG_TOPICS for topic in aliases):
             breakpoint()
-        # TODO: figure out how to create unique link to titles.
-        # Currently we generates ambiguous topics. Is it because of TOC ?
-        self.helpfile.add_topic(topic)
+
+        self.helpfile.add_topic(aliases[0], aliases[1:])
         return topic
 
     def visit_title(self, node: Element):
