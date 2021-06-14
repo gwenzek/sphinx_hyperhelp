@@ -1,7 +1,7 @@
 import re
 
 
-def test_table(file_builder):
+def test_table(build_file):
     # copied from Sphinx source code: https://github.com/sphinx-doc/sphinx/blob/71e732014ffe5a58a0c52ac16c948ef13d99d19d/sphinx/application.py#L901-L932
     RST_TABLE = """
 ################
@@ -42,6 +42,6 @@ __ http://docutils.sourceforge.net/docs/ref/transforms.html#transform-priority-r
 
 """
 
-    result = file_builder(RST_TABLE)
+    result, _ = build_file(RST_TABLE)
     result = re.sub(r" +", " ", result)
     assert "| Priority | Main purpose in Sphinx |" in result

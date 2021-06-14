@@ -64,12 +64,17 @@ class HyperHelpTranslator(TextTranslator):
             foot += "\n"
         self.body = "\n\n".join(part for part in (head, body, foot) if part)
 
+    @property
+    def current_indent(self) -> int:
+        return sum(self.stateindent)
+
     def end_state(
         self, wrap: bool = True, end: List[str] = [""], first: str = None
     ) -> None:
+        """Finalize a block of text by wrapping content if needed"""
         # Copied from TextTranslator. We want to have better control on the wrapping.
         content = self.states.pop()
-        maxindent = sum(self.stateindent)
+        maxindent = self.current_indent
         indent = self.stateindent.pop()
         result: List[Tuple[int, List[str]]] = []
         toformat: List[str] = []
@@ -87,10 +92,10 @@ class HyperHelpTranslator(TextTranslator):
 
         for itemindent, item in content:
             if itemindent == -1:
-                toformat.append(item)  # type: ignore
+                toformat.append(item)
             else:
                 do_format(maxindent)
-                result.append((indent + itemindent, item))  # type: ignore
+                result.append((indent + itemindent, item))
                 toformat = []
         do_format(maxindent)
         if first is not None and result:
@@ -148,27 +153,23 @@ class HyperHelpTranslator(TextTranslator):
     visit_definition_list = visit_desc_signature
     depart_definition_list = depart_desc_signature
 
-    def visit_literal_block(self, node: Element, language: str = ""):
-        super().visit_literal_block(node)
+    def visit_literal_block(self, node: Element, language: str = "rst"):
         if not language:
             language = node["classes"][1] if "code" in node["classes"] else ""
             if "language" in node:
                 language = node["language"]
+        # De-indent block of codes
+        self.new_state(-self.current_indent)
         self.add_text("```" + language + "\n")
 
     def depart_literal_block(self, node):
-        self.add_text("```\n\n")
+        self.add_text("\n```\n")
         super().depart_literal_block(node)
 
     def visit_doctest_block(self, node):
         self.visit_literal_block(node, "python")
 
     depart_doctest_block = depart_literal_block
-
-    def visit_block_quote(self, node):
-        # TODO: prefix ">" on all lines
-        super().visit_block_quote(node)
-        self.add_text("> ")
 
     def add_title_as_topic(self, node: Element) -> Optional[str]:
         assert self.helpfile
@@ -265,13 +266,10 @@ class HyperHelpTranslator(TextTranslator):
         self.add_text(f"|:{topic}:{text}|")
         raise nodes.SkipNode
 
-    def unknown_visit(self, node):
-        # TODO: we shouldn't need this.
-        # It only triggers when running make build, but not make test.
-        node_type = node.__class__.__name__
-        # self.document.reporter.warning(f"The {node_type} element not supported: {node.astext()}")
-        self.document.reporter.warning(f"The {node_type} element not supported")
-        raise nodes.SkipNode
+    visit_strong = TextTranslator.visit_emphasis
+    depart_strong = TextTranslator.visit_emphasis
+    visit_literal_strong = TextTranslator.visit_emphasis
+    depart_literal_strong = TextTranslator.visit_emphasis
 
 
 class HyperHelpWriter(TextWriter):

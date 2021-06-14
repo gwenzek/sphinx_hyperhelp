@@ -28,19 +28,13 @@ def app(monkeypatch, tmp_path: Path):
 
 
 @pytest.fixture()
-def file_builder(app):
+def build_file(app):
     """Converts one file"""
 
-    def _builder(content: str) -> str:
+    def _builder(content: str) -> (str, list[dict]):
         (Path(app.srcdir) / "index.rst").write_text(content)
         app.build()
-        return (app.outdir / "index.txt").read_text()
+        json_index = json.loads((app.outdir / "hyperhelp.json").read_text())
+        return (app.outdir / "index.txt").read_text(), json_index
 
     return _builder
-
-
-@pytest.fixture()
-def load_help_index(tmp_path: Path):
-    return lambda: json.loads(
-        (tmp_path / "_build/hyperhelp/hyperhelp.json").read_text()
-    )

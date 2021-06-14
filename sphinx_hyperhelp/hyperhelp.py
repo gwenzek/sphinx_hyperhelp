@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 from pathlib import Path
 from typing import NamedTuple
@@ -13,6 +14,10 @@ class HelpTopic(NamedTuple):
         if self.aliases:
             d["aliases"] = self.aliases
         return d
+
+    @staticmethod
+    def from_json(topic: dict) -> HelpTopic:
+        return HelpTopic(**topic)
 
 
 class HelpFile:

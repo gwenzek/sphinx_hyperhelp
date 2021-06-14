@@ -5,10 +5,9 @@ from unittest.mock import MagicMock
 import docutils.nodes
 
 from sphinx_hyperhelp import HyperHelpBuilder, HyperHelpTranslator
-from sphinx_hyperhelp.help_writer import uri2topic
 
 
-def test_links(file_builder, load_help_index):
+def test_links(build_file):
     # copied from Sphinx source code: sphinx/tests/roots/test-linkcheck/links.txt
     w3_url = "https://www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting"
     conf_url = "conf.py"
@@ -19,8 +18,7 @@ def test_links(file_builder, load_help_index):
 
 .. image:: https://www.duckduckgo.com/image.png
 """
-    result = file_builder(RST_LINKS)
-    help_index = load_help_index()
+    result, help_index = build_file(RST_LINKS)
 
     assert "default namespace" in result
     urls = set(help_index["externals"].keys())
@@ -46,14 +44,14 @@ def test_split_preserve_links(app):
     )
 
 
-def test_uri2topic():
-    assert (
-        uri2topic(Path("changes"), "#confval-man_make_section_directory")
-        == "confval-man_make_section_directory"
-    )
+# def test_uri2topic():
+#     assert (
+#         uri2topic(Path("changes"), "#confval-man_make_section_directory")
+#         == "confval-man_make_section_directory"
+#     )
 
-def test_todo(file_builder):
+def test_todo(build_file):
     RST_TODO = """hello
     .. todo:: Populate when the 'builders' document is split up."""
-    result = file_builder(RST_TODO)
+    result, _ = build_file(RST_TODO)
     assert "Populate when the 'builders' document is split up." not in result
