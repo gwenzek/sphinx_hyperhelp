@@ -1,10 +1,7 @@
 import re
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import docutils.nodes
-
-from sphinx_hyperhelp import HyperHelpBuilder, HyperHelpTranslator
 
 
 def test_links(build_file):
@@ -28,14 +25,18 @@ def test_links(build_file):
     assert w3_topic == "www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting"
     assert f"|:{w3_topic}:default namespace|" in result
 
+ALABSTER_THEME = (
+        "|:examples-documentation-using-the-alabaster-theme"
+        ":Documentation using the alabaster theme|"
+    )
 
-def test_split_preserve_links(app):
+def test_split_preserve_links(hh_translator):
     long_text = (
         "If there is a "
         "|:www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting:default namespace|,"
         " that full URI gets prepended to all of the non-prefixed tags."
     )
-    hh_translator = HyperHelpTranslator(document=MagicMock(), builder=app.builder)
+
     splits = hh_translator.split(long_text)
 
     assert (
@@ -43,15 +44,32 @@ def test_split_preserve_links(app):
         in splits
     )
 
+    assert hh_translator.split(ALABSTER_THEME) == [ALABSTER_THEME]
 
-# def test_uri2topic():
-#     assert (
-#         uri2topic(Path("changes"), "#confval-man_make_section_directory")
-#         == "confval-man_make_section_directory"
-#     )
+
+def test_wrap_preserve_links(build_file):
+    rst_file = f"""
+
+.. _examples-documentation-using-the-alabaster-theme:
+
+Documentation using the alabaster theme
+--------------------------
+
+* Projects using Sphinx
+
+  * xxx :ref:`examples-documentation-using-the-alabaster-theme`
+"""
+    help_file, _ = build_file(rst_file)
+    assert f"  * xxx {ALABSTER_THEME}" in help_file
+
 
 def test_todo(build_file):
     RST_TODO = """hello
     .. todo:: Populate when the 'builders' document is split up."""
     result, _ = build_file(RST_TODO)
     assert "Populate when the 'builders' document is split up." not in result
+
+
+# def test_uri2topic():
+    # TODO: the most important things to check is that topic generated when
+    # reading the title and when reading the reference are consistent

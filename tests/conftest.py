@@ -1,10 +1,12 @@
 import json
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 import sphinx.testing.util
 from sphinx.testing.path import path as SphinxPath
+from sphinx_hyperhelp import HyperHelpTranslator
 
 
 @pytest.fixture()
@@ -38,3 +40,8 @@ def build_file(app):
         return (app.outdir / "index.txt").read_text(), json_index
 
     return _builder
+
+
+@pytest.fixture()
+def hh_translator(app) -> HyperHelpTranslator:
+    return HyperHelpTranslator(document=MagicMock(), builder=app.builder)
