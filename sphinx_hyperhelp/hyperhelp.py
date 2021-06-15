@@ -42,7 +42,7 @@ class HelpFile:
 
     def add_topic(self, name: str, aliases: list[str] = []) -> None:
         if not aliases:
-            qualified_name = f"{self.module}/{name}"
+            qualified_name = f"{self.module}.txt/{name}"
             aliases = [qualified_name]
         self.topics.append(HelpTopic(name, name, aliases=aliases))
 

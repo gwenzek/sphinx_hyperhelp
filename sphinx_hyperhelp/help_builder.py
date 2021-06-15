@@ -48,7 +48,7 @@ class HyperHelpBuilder(TextBuilder):
         yield from self.env.found_docs
 
     def get_target_uri(self, docname: str, typ: str = None) -> str:
-        return docname
+        return docname + ".txt"
 
     def get_relative_uri(self, from_: str, to: str, typ: str = None) -> str:
         # ignore source path, Hyperhelp only has absolute paths

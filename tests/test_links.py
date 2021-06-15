@@ -90,7 +90,7 @@ def test_todo(build_file):
 # TODO: the most important things to check is that topic generated when
 # reading the title and when reading the reference are consistent
 
-def test_topic_title(app, build_file):
+def test_topic_title(build_file):
 
     rst_file = """.. _dev-deprecated-apis:
 
@@ -105,3 +105,16 @@ On developing Sphinx, we are always careful to the compatibility of our APIs.
 
     assert len(topics) == 1
     assert "dev-deprecated-apis" in HelpTopic.from_json(topics[0])
+
+def test_docref(app, build_file):
+    (Path(app.srcdir) / "templating.rst").write_text("Moar templates\n--------------")
+    rst_file = """
+Templating
+----------
+
+The :doc:`guide to templating </templating>` is helpful if you want to write your
+"""
+    help_file, _ = build_file(rst_file)
+
+    assert "|:templating.txt:guide to templating|" in help_file
+

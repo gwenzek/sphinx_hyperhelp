@@ -221,7 +221,7 @@ class HyperHelpTranslator(TextTranslator):
         aliases = []
         for topic in parent["ids"]:
             aliases.append(topic)
-            aliases.append(self.builder.current_docname + "/" + topic)
+            aliases.append(self.builder.current_docname + ".txt/" + topic)
 
         if any(topic in DEBUG_TOPICS for topic in aliases):
             breakpoint()

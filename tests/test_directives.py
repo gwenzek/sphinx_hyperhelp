@@ -36,7 +36,7 @@ The reStructuredText domain (name **rst**) provides the following directives:
     help_file, help_index = build_file(rst_file)
     topics: list[dict] = help_index["help_files"]["index.txt"][1:]
     assert find_topic("directive-rst-directive", topics)
-    assert find_topic("index/directive-rst-directive", topics)
+    assert find_topic("index.txt/directive-rst-directive", topics)
 
     print(help_file)
     assert "```rst\n.. rst:directive:: foo\n" in help_file
