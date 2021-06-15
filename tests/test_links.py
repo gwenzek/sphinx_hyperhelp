@@ -3,6 +3,7 @@ from pathlib import Path
 
 import docutils.nodes
 
+from sphinx_hyperhelp import HelpTopic
 from sphinx_hyperhelp.help_writer import TopicRef
 
 
@@ -88,3 +89,19 @@ def test_todo(build_file):
 # def test_uri2topic():
 # TODO: the most important things to check is that topic generated when
 # reading the title and when reading the reference are consistent
+
+def test_topic_title(app, build_file):
+
+    rst_file = """.. _dev-deprecated-apis:
+
+Deprecated APIs
+===============
+
+On developing Sphinx, we are always careful to the compatibility of our APIs.
+"""
+
+    _, help_index = build_file(rst_file)
+    topics = help_index["help_files"]["index.txt"][1:]
+
+    assert len(topics) == 1
+    assert "dev-deprecated-apis" in HelpTopic.from_json(topics[0])

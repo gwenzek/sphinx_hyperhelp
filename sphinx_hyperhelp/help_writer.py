@@ -242,16 +242,17 @@ class HyperHelpTranslator(TextTranslator):
         if lvl == 0:
             breakpoint()
 
+        topic = self.add_title_as_topic(node)
         if lvl == 1 and not self.helpfile.description:
             # Document heading
             # TODO: use git/file date ?
             date = datetime.today()
             self.helpfile.add_description(title)
             self.head.append(f'%hyperhelp title="{title}" date="{date:%Y-%m-%d}"')
+            if topic:
+                self.add_text(f"*|{topic}:⚓|*\n")
             raise nodes.SkipNode
 
-        # TODO: reuse topic name from rst
-        topic = self.add_title_as_topic(node)
         if topic:
             self.add_text(f"{lvl * '#'} {topic}: ")
         else:

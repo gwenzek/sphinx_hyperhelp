@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 
 class HelpTopic(NamedTuple):
@@ -15,6 +15,9 @@ class HelpTopic(NamedTuple):
         if self.aliases:
             d["aliases"] = self.aliases
         return d
+
+    def __contains__(self, topic: Any) -> bool:
+        return topic == self.topic or topic in self.aliases
 
     @staticmethod
     def from_json(topic: dict) -> HelpTopic:
