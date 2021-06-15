@@ -46,13 +46,9 @@ some of the TextTranslator methods.
 
 ## Todo list
 
-* fix broken links (currently 261 unresolved topics)
+* fix broken links (currently 176 unresolved topics)
 * ensure links are surrounded by spaces
 * incremental compilation 
-
-<!-- TODOs from code: start -->
-
-<!-- TODOs from code: end   -->
 
 ## Crazy ideas
 

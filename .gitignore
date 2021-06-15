@@ -9,7 +9,7 @@ debug.py
 __pycache__/
 *.py[cod]
 *$py.class
-
+/dist/
 
 # Environments
 .env
