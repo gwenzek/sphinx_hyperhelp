@@ -3,6 +3,8 @@
 /repos/
 /build/
 
+debug.py
+
 # Byte-compiled
 __pycache__/
 *.py[cod]

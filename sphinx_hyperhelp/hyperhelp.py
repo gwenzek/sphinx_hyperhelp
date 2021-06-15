@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import json
 from pathlib import Path
 from typing import NamedTuple
@@ -68,7 +69,7 @@ class HelpIndex(NamedTuple):
     description: str
     doc_root: Path
     help_files: dict[str, HelpFile] = {}
-    externals: dict[str, HelpFile] = {}
+    externals: dict[str, HelpExternal] = {}
 
     def as_json(self) -> dict:
         externals = {url: v.as_json() for url, v in self.externals.items()}

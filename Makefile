@@ -43,10 +43,13 @@ format:
 	poetry run isort .
 	poetry run black .
 
+lint:
+	poetry run mypy
+
 test:
 	poetry run pytest
 
-ci: install format test
+ci: install format lint test
 
 todo:
 	grep 'TODO' README.md sphinx_hyperhelp/*.py

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 def test_directives(build_file):
     rst_file = """
 The reStructuredText domain

@@ -14,6 +14,8 @@ sphinxcontrib-websupport = "^1.2.4"
 black = "^21.5b2"
 isort = "^5.8.0"
 pytest = "^6.2.4"
+mypy = "^0.902"
+types-docutils = "^0.1.6"
 
 [tool.poetry.plugins."sphinx.builders"]
 "hyperhelp" = "sphinx_hyperhelp"
@@ -24,3 +26,16 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.isort]
+profile = "black"
+src_paths = ["tests", "sphinx_hyperhelp"]
+
+[tool.mypy]
+python_version = 3.8
+files = "tests/**/*.py,sphinx_hyperhelp/**/*.py"
+check_untyped_defs = true
+show_error_codes = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_configs = true

@@ -26,7 +26,7 @@ class HyperHelpBuilder(TextBuilder):
 
     out_suffix = ".txt"
     allow_parallel = True
-    default_translator_class = HyperHelpTranslator
+    default_translator_class = HyperHelpTranslator  # type: ignore
 
     current_docname: str = ""
     index: HelpIndex = None  # type: ignore

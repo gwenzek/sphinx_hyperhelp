@@ -3,6 +3,8 @@ from pathlib import Path
 
 import docutils.nodes
 
+from sphinx_hyperhelp.help_writer import TopicRef
+
 
 def test_links(build_file):
     # copied from Sphinx source code: sphinx/tests/roots/test-linkcheck/links.txt
@@ -25,26 +27,27 @@ def test_links(build_file):
     assert w3_topic == "www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting"
     assert f"|:{w3_topic}:default namespace|" in result
 
+
 ALABSTER_THEME = (
-        "|:examples-documentation-using-the-alabaster-theme"
-        ":Documentation using the alabaster theme|"
-    )
+    "|:examples-documentation-using-the-alabaster-theme"
+    ":Documentation using the alabaster theme|"
+)
+
 
 def test_split_preserve_links(hh_translator):
-    long_text = (
-        "If there is a "
-        "|:www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting:default namespace|,"
-        " that full URI gets prepended to all of the non-prefixed tags."
+    assert len(TopicRef(ALABSTER_THEME)) == len(
+        "|Documentation using the alabaster theme|"
     )
+    lines = [
+        "If there is a ",
+        TopicRef(ALABSTER_THEME),
+        ", that full URI gets prepended to all of the non-prefixed tags.",
+    ]
+    splits = hh_translator.split(lines)
 
-    splits = hh_translator.split(long_text)
-
-    assert (
-        "|:www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting:default namespace|"
-        in splits
-    )
-
-    assert hh_translator.split(ALABSTER_THEME) == [ALABSTER_THEME]
+    assert ALABSTER_THEME in splits
+    assert splits[:9] == ["If", " ", "there", " ", "is", " ", "a", " ", ALABSTER_THEME]
+    assert hh_translator.split(TopicRef(ALABSTER_THEME)) == [ALABSTER_THEME]
 
 
 def test_wrap_preserve_links(build_file):
@@ -63,6 +66,18 @@ Documentation using the alabaster theme
     assert f"  * xxx {ALABSTER_THEME}" in help_file
 
 
+def test_wrap_short_lines(build_file):
+    rst_file = f"""
+this
+should
+all be
+on the same line
+.
+"""
+    help_file, _ = build_file(rst_file)
+    assert "this should all be on the same line ." in help_file
+
+
 def test_todo(build_file):
     RST_TODO = """hello
     .. todo:: Populate when the 'builders' document is split up."""
@@ -71,5 +86,5 @@ def test_todo(build_file):
 
 
 # def test_uri2topic():
-    # TODO: the most important things to check is that topic generated when
-    # reading the title and when reading the reference are consistent
+# TODO: the most important things to check is that topic generated when
+# reading the title and when reading the reference are consistent

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path
@@ -6,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 import sphinx.testing.util
 from sphinx.testing.path import path as SphinxPath
+
 from sphinx_hyperhelp import HyperHelpTranslator
 
 
@@ -33,7 +36,7 @@ def app(monkeypatch, tmp_path: Path):
 def build_file(app):
     """Converts one file"""
 
-    def _builder(content: str) -> (str, list[dict]):
+    def _builder(content: str) -> tuple[str, list[dict]]:
         (Path(app.srcdir) / "index.rst").write_text(content)
         app.build()
         json_index = json.loads((app.outdir / "hyperhelp.json").read_text())
