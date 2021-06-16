@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from sphinx.application import Sphinx
 
-def test_directives(build_file):
+from .utils import build_file
+
+
+def test_directives(app: Sphinx):
     rst_file = """
 The reStructuredText domain
 ---------------------------
@@ -33,7 +37,7 @@ The reStructuredText domain (name **rst**) provides the following directives:
          Bar description.
    """
 
-    help_file, help_index = build_file(rst_file)
+    help_file, help_index = build_file(app, rst_file)
     topics: list[dict] = help_index["help_files"]["index.txt"][1:]
     assert find_topic("directive-rst-directive", topics)
     assert find_topic("index.txt/directive-rst-directive", topics)

@@ -1,9 +1,11 @@
 import re
 
+from .utils import build_file
 
-def test_table(build_file):
+
+def test_table(app):
     # copied from Sphinx source code: https://github.com/sphinx-doc/sphinx/blob/71e732014ffe5a58a0c52ac16c948ef13d99d19d/sphinx/application.py#L901-L932
-    RST_TABLE = """
+    rst_file = """
 ################
   Sample table
 ################
@@ -41,7 +43,6 @@ refs: `Transform Priority Range Categories`__
 __ http://docutils.sourceforge.net/docs/ref/transforms.html#transform-priority-range-categories
 
 """
-
-    result, _ = build_file(RST_TABLE)
-    result = re.sub(r" +", " ", result)
-    assert "| Priority | Main purpose in Sphinx |" in result
+    help_file, _ = build_file(app, rst_file)
+    help_file = re.sub(r" +", " ", help_file)
+    assert "| Priority | Main purpose in Sphinx |" in help_file

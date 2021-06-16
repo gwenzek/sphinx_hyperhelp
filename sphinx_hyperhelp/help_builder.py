@@ -31,7 +31,7 @@ class HyperHelpBuilder(TextBuilder):
     current_docname: str = ""
     index: HelpIndex = None  # type: ignore
     links: dict[str, str] = {}
-    _translator: HyperHelpTranslator = None # type: ignore
+    _translator: HyperHelpTranslator = None  # type: ignore
 
     def prepare_writing(self, docnames):
         self.writer = HyperHelpWriter(self)
