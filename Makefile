@@ -1,4 +1,4 @@
-TARGET_NAME=sphinx
+TARGET_NAME=Sphinx
 TARGET_REPO=https://github.com/sphinx-doc/sphinx.git
 TARGET_VERSION=v4.0.2
 ST_PACKAGES=$(HOME)/Library/Application Support/Sublime Text/Packages/
@@ -15,14 +15,20 @@ all: test build
 build: build/$(TARGET_NAME)/hyperhelp
 
 build/$(TARGET_NAME)/hyperhelp: repos/$(TARGET_NAME)
-	touch $@/unresolved.txt
-	mv -f $@/unresolved.txt $@/unresolved_prev.txt
+	[ ! -f $@/unresolved.txt ] || mv -f $@/unresolved.txt $@/unresolved_prev.txt
 	poetry run python -m sphinx -P -b hyperhelp $</doc $(@)
+	# DEBUG: Changes in unresolved links:
 	diff $@/unresolved.txt $@/unresolved_prev.txt | head
 
-	# TODO: open the documentation in sublime
-	subl --command 'hyperhelp_index {"package": "Sphinx"}'
-	ln -sih `realpath $(@D)` "$(ST_PACKAGES)/$(TARGET_NAME)"
+	# Adding $(TARGET_NAME) to ST Packages.
+	if [ -h "$(ST_PACKAGES)/$(TARGET_NAME)" ]; then\
+		[[ `realpath $(@D)` = `realpath "$(ST_PACKAGES)/$(TARGET_NAME)"` ]] || \
+		echo "!!! $(ST_PACKAGES)/$(TARGET_NAME) already exists !!!" ; \
+	else \
+		ln -sih `realpath $(@D)` "$(ST_PACKAGES)/$(TARGET_NAME)"; \
+	fi;
+
+	subl --command 'hyperhelp_topic {"package": "$(TARGET_NAME)", "topic": "contents.txt"}'
 
 build_html: build/$(TARGET_NAME)/html
 
