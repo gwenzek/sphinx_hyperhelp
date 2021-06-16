@@ -34,6 +34,7 @@ def app(monkeypatch, tmp_path: Path):
 
 @pytest.fixture()
 def build_file(app):
+    # TODO: make this a regular function
     """Converts one file"""
 
     def _builder(content: str) -> tuple[str, list[dict]]:
@@ -47,4 +48,13 @@ def build_file(app):
 
 @pytest.fixture()
 def hh_translator(app) -> HyperHelpTranslator:
+    # TODO: this doesn't really work
     return HyperHelpTranslator(document=MagicMock(), builder=app.builder)
+
+
+@pytest.fixture()
+def parse_rst(app):
+    # TODO: this doesn't yield the same doctree than when calling app.build
+    from sphinx.testing import restructuredtext
+
+    return lambda rst_file: restructuredtext.parse(app, rst_file)

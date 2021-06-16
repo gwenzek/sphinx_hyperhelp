@@ -20,9 +20,9 @@ build/$(TARGET_NAME)/hyperhelp: repos/$(TARGET_NAME)
 	poetry run python -m sphinx -P -b hyperhelp $</doc $(@)
 	diff $@/unresolved.txt $@/unresolved_prev.txt | head
 
-	ln -sih `realpath $(@D)` "$(ST_PACKAGES)/$(TARGET_NAME)"
 	# TODO: open the documentation in sublime
-	# subl --command hyperhelp_index --args '{"package": "Sphinx"}'
+	subl --command 'hyperhelp_index {"package": "Sphinx"}'
+	ln -sih `realpath $(@D)` "$(ST_PACKAGES)/$(TARGET_NAME)"
 
 build_html: build/$(TARGET_NAME)/html
 

@@ -69,6 +69,8 @@ class HyperHelpTranslator(TextTranslator):
         print(node["source"])
         assert self.helpfile is None
         self.helpfile = self.builder.add_help_file()
+        self.builder._doctree = node
+        self.builder._translator = self
         if self.builder.current_docname in DEBUG_DOCS:
             breakpoint()
 

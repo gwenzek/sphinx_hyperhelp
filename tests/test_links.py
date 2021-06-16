@@ -86,13 +86,40 @@ def test_todo(build_file):
     assert "Populate when the 'builders' document is split up." not in result
 
 
-# def test_uri2topic():
-# TODO: the most important things to check is that topic generated when
-# reading the title and when reading the reference are consistent
+def test_uri2topic(app, build_file):
+    # TODO: the most important things to check is that topic generated when
+    # reading the title and when reading the reference are consistent
+    rst_file = """
+.. _dev-deprecated-apis:
+Deprecated APIs
+===============
+
+:ref:`lot of deprecated apis <dev-deprecated-apis>`
+    """
+    build_file(rst_file)
+
+    doctree = app.builder._doctree
+    hh_translator = app.builder._translator
+    breakpoint()
+    # hh_translator.builder.current_docname = "index"
+    hh_translator.visit_document(doctree)
+    title = doctree[1][0]
+    assert isinstance(title, docutils.nodes.title)
+    topic_from_title = hh_translator.add_title_as_topic(title)
+
+    ref = doctree[1][1][0]
+    assert isinstance(ref, docutils.nodes.reference)
+    topic_from_ref = hh_translator.uri2topic(ref)
+
+    assert topic_from_title and topic_from_ref
+    # TODO: We don't need exact equality here
+    assert topic_from_ref == topic_from_title
+
 
 def test_topic_title(build_file):
 
     rst_file = """.. _dev-deprecated-apis:
+
 
 Deprecated APIs
 ===============
@@ -118,3 +145,29 @@ The :doc:`guide to templating </templating>` is helpful if you want to write you
 
     assert "|:templating.txt:guide to templating|" in help_file
 
+
+def test_local_toc(app, build_file):
+    rst_file = """
+=================
+Installing Sphinx
+=================
+
+.. contents::
+   :depth: 1
+   :local:
+   :backlinks: none
+
+.. highlight:: console
+
+Overview
+--------
+
+Linux
+-----
+
+Windows
+-------
+"""
+    help_file, _ = build_file(rst_file)
+    assert "* |:overview: Overview|" in help_file
+    assert "* |:linux: Linux|" in help_file
