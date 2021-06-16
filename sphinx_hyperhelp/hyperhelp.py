@@ -41,6 +41,7 @@ class HelpFile:
         return [self.description] + [t.as_json() for t in self.topics]  # type: ignore
 
     def add_topic(self, name: str, aliases: list[str] = []) -> None:
+        # TODO: this code is specific to sphinx move it to the writer
         if not aliases:
             qualified_name = f"{self.module}.txt/{name}"
             aliases = [qualified_name]

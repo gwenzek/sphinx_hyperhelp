@@ -49,6 +49,7 @@ some of the TextTranslator methods.
 * fix broken links (currently 151 unresolved topics)
 * ensure links are surrounded by spaces
 * incremental compilation 
+* create a table of contents for HyperHelp, by parsing the `root_doc`
 
 ## Crazy ideas
 

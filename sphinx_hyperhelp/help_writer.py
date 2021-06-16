@@ -170,6 +170,9 @@ class HyperHelpTranslator(TextTranslator):
         # We don't directly call wrapper.wrap, but do our own splitting instead
         # This allows to not split in the middle of a link.
         # TODO: would it be better to inherit from TextWrapper instead ?
+        # TODO: sphinx has a custom _wrap_chunks that handle utf-8 combining chars
+        # I've disabled it because using `len` to compute the visible len of strings
+        # allows to override it in `TopicRef` class.
         wrapper = self.get_wrapper(width)
         chunks = self.split(fragments)
         return wrapper._wrap_chunks(chunks)
@@ -219,15 +222,16 @@ class HyperHelpTranslator(TextTranslator):
             logger.debug(f"No ids for node: {parent} in {self.helpfile}")
             return None
 
-        # TODO handle aliases. The node['ids'] may have more than one value
         aliases = []
         for topic in parent["ids"]:
+            # TODO: some ids looks like "id1". Only keep the fully qualified name
             aliases.append(topic)
             aliases.append(self.builder.current_docname + ".txt/" + topic)
 
         if any(topic in DEBUG_TOPICS for topic in aliases):
             breakpoint()
 
+        # TODO add a proper caption
         self.helpfile.add_topic(aliases[0], aliases[1:])
         return topic
 
