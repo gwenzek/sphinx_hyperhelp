@@ -1,16 +1,30 @@
 name: 'Basic CI: formatting, linting, testing'
 on: [push]
 jobs:
-  basic-ci:
+  format:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🔎 ${{ github.repository }} @ ${{ github.ref }}"
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
       - run: make install
       - run: make format
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: make install
       - run: make lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: make install
       - run: make test
-      - run: echo "🍏 This job's status is ${{ job.status }}."
