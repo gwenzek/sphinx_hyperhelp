@@ -1,4 +1,4 @@
-name: Basic CI: formatting, linting, testing
+name: 'Basic CI: formatting, linting, testing'
 on: [push]
 jobs:
   basic-ci:
