@@ -9,6 +9,7 @@ license = "BSD-3-Clause"
 python = "^3.8"
 Sphinx = "^4.0.2"
 sphinxcontrib-websupport = "^1.2.4"
+func-argparse = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b2"
@@ -19,6 +20,9 @@ types-docutils = "^0.1.6"
 
 [tool.poetry.plugins."sphinx.builders"]
 "hyperhelp" = "sphinx_hyperhelp"
+
+[tool.poetry.scripts]
+"sphinx_hyperhelp" = "sphinx_hyperhelp:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

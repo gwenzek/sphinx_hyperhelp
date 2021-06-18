@@ -108,6 +108,8 @@ class HyperHelpBuilder(TextBuilder):
             logger.error(f"Found {len(conflicts)} / {total_links} ambiguous topics")
             valid = False
 
+        # TODO: also validate the index:
+        # https://github.com/STealthy-and-haSTy/hyperhelpcore/blob/master/all/hyperhelpcore/index_validator.py
         return valid
 
     def add_help_file(self) -> HelpFile:

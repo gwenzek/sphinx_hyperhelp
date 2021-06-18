@@ -113,6 +113,17 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
+name = "func-argparse"
+version = "1.1.1"
+description = "Generate CLI ArgumentParser from a function signature."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+dev = ["mypy (>=0.730)", "pytest", "black", "isort"]
+
+[[package]]
 name = "idna"
 version = "2.10"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -470,7 +481,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4be5923d89d9cb2a0144f72a62cec9b7631829f0d265b2fa60d6300e39e988a2"
+content-hash = "0ec08ceaf99fd996ee666cea0e22454982be635272c0873ff64d66590b554f91"
 
 [metadata.files]
 alabaster = [
@@ -516,6 +527,10 @@ colorama = [
 docutils = [
     {file = "docutils-0.17.1-py2.py3-none-any.whl", hash = "sha256:cf316c8370a737a022b72b56874f6602acf974a37a9fba42ec2876387549fc61"},
     {file = "docutils-0.17.1.tar.gz", hash = "sha256:686577d2e4c32380bb50cbb22f575ed742d58168cee37e99117a854bcd88f125"},
+]
+func-argparse = [
+    {file = "func_argparse-1.1.1-py3-none-any.whl", hash = "sha256:0a530c93ff18e838e486ced9e6b8b606a1cb184627f78d88e978c2e099426bf5"},
+    {file = "func_argparse-1.1.1.tar.gz", hash = "sha256:a61bafc642c0ba711c51567fcd860526ec40de72bfafccad9c2a9b49c166166b"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
