@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Builder for Sphinx documentation, to the HyperHelp format, for Sublime Text reading"
 authors = ["Guillaume Wenzek"]
 license = "BSD-3-Clause"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"

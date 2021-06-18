@@ -35,6 +35,9 @@ build_html: build/$(TARGET_NAME)/html
 build/$(TARGET_NAME)/html: repos/$(TARGET_NAME)
 	python -m sphinx -P -b html $</doc $@
 
+# TODO: This should replace build command once it's feature equivalent
+py_build:
+	poetry run sphinx_hyperhelp --name $(TARGET_NAME) --repo $(TARGET_REPO) --tag $(TARGET_VERSION)
 
 repos/$(TARGET_NAME):
 	git clone --depth 2 --branch $(TARGET_VERSION) $(TARGET_REPO) $@

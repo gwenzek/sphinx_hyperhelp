@@ -42,6 +42,13 @@ def show_unresolved_diff(unresolved: Path, unresolved_prev: Path) -> None:
 
 
 def build(name: str, repo: str, tag: str = "") -> Path:
+    """Builds a Sphinx projects documentation into a Sublime Text package.
+
+    - name: name of the output ST package
+      Be careful to not create conflicts with other packages
+    - repo: git repository of the project to build documentation from
+    - tag: specific git tag/branch/commit to fetch. Defaults to the `master` branch of the repo.
+    """
     srcdir = download(name, repo, tag)
     outdir = BUILD_DIR / name / "hyperhelp"
 
