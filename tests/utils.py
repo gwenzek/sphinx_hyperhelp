@@ -14,8 +14,9 @@ def build_file(app: Sphinx, content: str) -> tuple[str, dict]:
 
     (Path(app.srcdir) / "index.rst").write_text(content)
     app.build()
-    json_index = json.loads((app.outdir / "hyperhelp.json").read_text())
-    help_file = (app.outdir / "index.txt").read_text()
+    outdir = Path(app.outdir)
+    json_index = json.loads((outdir / "hyperhelp.json").read_text())
+    help_file = (outdir / "index.txt").read_text()
     return help_file, json_index
 
 
@@ -29,8 +30,8 @@ def build_file_and_doctree(
     We may need to add a factory that creates and prepares a translator.
     """
     help_file, json_index = build_file(app, content)
-    doctree = app.builder._doctree
+    doctree = app.builder._doctree  # type: ignore
     assert isinstance(doctree, docutils.nodes.document)
-    translator = app.builder._translator
+    translator = app.builder._translator  # type: ignore
     assert isinstance(translator, HyperHelpTranslator)
     return help_file, json_index, doctree, translator

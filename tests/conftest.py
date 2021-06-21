@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import Iterator
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,7 +15,7 @@ from sphinx_hyperhelp import HyperHelpTranslator
 
 
 @pytest.fixture()
-def app(monkeypatch, tmp_path: Path) -> Sphinx:
+def app(monkeypatch, tmp_path: Path) -> Iterator[Sphinx]:
     """Creates a SphinxApp, ready to build the `tmp_path` directory.
 
     This is a simplified version of `shpinx.testing.fixtures.make_app`
@@ -41,4 +42,4 @@ def hh_translator(app: Sphinx) -> HyperHelpTranslator:
     assumes it's working with a builder on a specific document.
     `build_file_and_doctree(app, rst_file)` will return the translator used.
     """
-    return HyperHelpTranslator(document=MagicMock(), builder=app.builder)
+    return HyperHelpTranslator(document=MagicMock(), builder=app.builder)  # type: ignore

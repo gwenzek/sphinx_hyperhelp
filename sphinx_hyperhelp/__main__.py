@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import subprocess
 import sys
@@ -58,8 +60,9 @@ def build(name: str, repo: str, tag: str = "") -> Path:
     if unresolved.exists():
         unresolved.rename(unresolved_prev)
 
-    sphinx_args = ["-P", "-b", "hyperhelp", srcdir / "doc", outdir]
-    subprocess.run([sys.executable, "-m", "sphinx"] + sphinx_args, check=True)
+    sphinx_cmd: list[str | Path] = [sys.executable, "-m=sphinx", "-P"]
+    sphinx_cmd += ["-b=hyperhelp", srcdir / "doc", outdir]
+    subprocess.run(sphinx_cmd, check=True)
 
     show_unresolved_diff(unresolved, unresolved_prev)
     # TODO: link the helps file into ST directory
