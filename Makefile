@@ -3,6 +3,11 @@ TARGET_REPO=https://github.com/sphinx-doc/sphinx.git
 TARGET_VERSION=v4.0.2
 ST_PACKAGES=$(HOME)/Library/Application Support/Sublime Text/Packages/
 
+FMT_FLAGS=
+ifeq ($(CI), true)
+	FMT_FLAGS=--check --diff
+endif
+
 all: test build
 
 # Commands for people wanting to build documentation
@@ -21,7 +26,7 @@ build/$(TARGET_NAME)/hyperhelp: repos/$(TARGET_NAME)
 	diff $@/unresolved.txt $@/unresolved_prev.txt | head
 
 	# Adding $(TARGET_NAME) to ST Packages.
-	if [ -h "$(ST_PACKAGES)/$(TARGET_NAME)" ]; then\
+	if [ -h "$(ST_PACKAGES)/$(TARGET_NAME)" ]; then \
 		[[ `realpath $(@D)` = `realpath "$(ST_PACKAGES)/$(TARGET_NAME)"` ]] || \
 		echo "!!! $(ST_PACKAGES)/$(TARGET_NAME) already exists !!!" ; \
 	else \
@@ -54,8 +59,7 @@ install:
 	poetry install
 
 format:
-	poetry run isort .
-	poetry run black .
+	poetry run isort $(FMT_FLAGS) .; poetry run black $(FMT_FLAGS) .
 
 lint:
 	poetry run mypy

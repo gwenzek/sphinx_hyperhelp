@@ -1,8 +1,9 @@
-import func_argparse
 import os
 import subprocess
 import sys
 from pathlib import Path
+
+import func_argparse
 
 BUILD_DIR = Path(__file__).parent.parent / "build"
 REPOS_DIR = Path(__file__).parent.parent / "repos"
