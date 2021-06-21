@@ -49,6 +49,6 @@ The reStructuredText domain (name **rst**) provides the following directives:
 
 def find_topic(name: str, topics: list[dict]) -> dict:
     for topic in topics:
-        if name == topic["topic"] or name in topic["aliases"]:
+        if name == topic["topic"] or name in topic.get("aliases", []):
             return topic
     return {}

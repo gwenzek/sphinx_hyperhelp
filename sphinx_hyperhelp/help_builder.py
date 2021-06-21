@@ -12,7 +12,7 @@ from sphinx.util import logging
 from sphinx.util.osutil import ensuredir, os_path
 
 from .help_writer import HyperHelpTranslator, HyperHelpWriter
-from .hyperhelp import HelpFile, HelpIndex
+from .hyperhelp import HelpFile, HelpIndex, HelpTopic
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ class HyperHelpBuilder(TextBuilder):
     default_translator_class = HyperHelpTranslator  # type: ignore
 
     current_docname: str = ""
+    current_helpfile: HelpFile = None  # type: ignore
     index: HelpIndex = None  # type: ignore
     links: dict[str, str] = {}
     _translator: HyperHelpTranslator = None  # type: ignore
@@ -64,8 +65,8 @@ class HyperHelpBuilder(TextBuilder):
 
     def validate(self) -> bool:
         all_topics = [
-            (hf.module, help_topic)
-            for hf in self.index.help_files.values()
+            (file, help_topic)
+            for file, hf in self.index.help_files.items()
             for help_topic in hf.topics
         ]
         resolved_topics: dict[str, str] = {}
@@ -112,14 +113,28 @@ class HyperHelpBuilder(TextBuilder):
         # https://github.com/STealthy-and-haSTy/hyperhelpcore/blob/master/all/hyperhelpcore/index_validator.py
         return valid
 
-    def add_help_file(self) -> HelpFile:
-        docname = self.current_docname
+    def write_doc(self, docname: str, doctree: Node) -> None:
         assert docname
-        # breakpoint()
-        help_file = HelpFile(docname)
+        self.current_helpfile = HelpFile(docname)
+        target = self.get_target_uri(docname)
+        self.index.help_files[target] = self.current_helpfile
 
-        self.index.help_files[help_file.module + ".txt"] = help_file
-        return help_file
+        super().write_doc(docname, doctree)
+
+    def add_topic(
+        self, topic: str, caption: str = "", aliases: list[str] = []
+    ) -> HelpTopic:
+        if not caption:
+            caption = topic
+
+        target = self.get_target_uri(self.current_docname)
+        more_aliases = ["/".join((target, topic))]
+        for alias in aliases:
+            more_aliases.append("/".join((target, alias)))
+
+        help_topic = HelpTopic(topic, caption=topic, aliases=aliases + more_aliases)
+        self.current_helpfile.topics.append(help_topic)
+        return help_topic
 
 
 def setup(app: Sphinx) -> Dict[str, Any]:

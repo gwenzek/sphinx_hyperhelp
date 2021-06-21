@@ -25,27 +25,19 @@ class HelpTopic(NamedTuple):
 
 
 class HelpFile:
-    def __init__(self, module: str, description: str = ""):
-        self.module = module
+    def __init__(self, description: str = ""):
         self.description = description
         self.topics: list[HelpTopic] = []
         self.sources: dict[str, HelpFile] = {}
         self.toctree: list[Path] = []
 
     def __repr__(self) -> str:
-        return f"HelpFile({self.module!r}, {self.description!r})"
+        return f"HelpFile({self.description!r})"
 
     def as_json(self) -> list:
         if not self.description and not self.topics:
             return []
         return [self.description] + [t.as_json() for t in self.topics]  # type: ignore
-
-    def add_topic(self, name: str, aliases: list[str] = []) -> None:
-        # TODO: this code is specific to sphinx move it to the writer
-        if not aliases:
-            qualified_name = f"{self.module}.txt/{name}"
-            aliases = [qualified_name]
-        self.topics.append(HelpTopic(name, name, aliases=aliases))
 
     def add_description(self, description: str) -> None:
         assert not self.description, f"{self} already got a description"
@@ -60,12 +52,12 @@ class HelpFile:
 
 
 class HelpExternal(NamedTuple):
-    description: str
     topic: str
+    uri: str
     caption: str
 
     def as_json(self) -> list:
-        return [self.description, {"topic": self.topic, "caption": self.caption}]
+        return [self.uri, {"topic": self.topic, "caption": self.caption}]
 
 
 class HelpIndex(NamedTuple):

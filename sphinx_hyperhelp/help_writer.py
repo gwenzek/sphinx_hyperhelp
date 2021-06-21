@@ -12,7 +12,7 @@ from docutils import nodes
 from docutils.nodes import Element, Node, Text
 from sphinx.writers.text import TextTranslator, TextWriter
 
-from .hyperhelp import HelpExternal, HelpFile
+from .hyperhelp import HelpExternal, HelpFile, HelpTopic
 
 if TYPE_CHECKING:
     from .help_builder import HyperHelpBuilder
@@ -68,7 +68,7 @@ class HyperHelpTranslator(TextTranslator):
         super().visit_document(node)
         print(node["source"])
         assert self.helpfile is None
-        self.helpfile = self.builder.add_help_file()
+        self.helpfile = self.builder.current_helpfile
         self.builder._doctree = node
         self.builder._translator = self
         if self.builder.current_docname in DEBUG_DOCS:
@@ -185,7 +185,8 @@ class HyperHelpTranslator(TextTranslator):
         topic = node["ids"][0]
         if topic in DEBUG_TOPICS:
             breakpoint()
-        self.helpfile.add_topic(topic)
+        self.builder.add_topic(topic)
+        # TODO: should we use a more explicit alias here ?
         self.add_text(f"*{topic}:")
 
     def depart_desc_signature(self, node: Element) -> None:
@@ -222,17 +223,14 @@ class HyperHelpTranslator(TextTranslator):
             logger.debug(f"No ids for node: {parent} in {self.helpfile}")
             return None
 
-        aliases = []
-        for topic in parent["ids"]:
-            # TODO: some ids looks like "id1". Only keep the fully qualified name
-            aliases.append(topic)
-            aliases.append(self.builder.current_docname + ".txt/" + topic)
-
-        if any(topic in DEBUG_TOPICS for topic in aliases):
+        if any(alias in DEBUG_TOPICS for alias in parent["ids"]):
             breakpoint()
 
         # TODO add a proper caption
-        self.helpfile.add_topic(aliases[0], aliases[1:])
+        topic, aliases = parent["ids"][0], parent["ids"][1:]
+        help_topic = self.builder.add_topic(
+            topic, caption=node.astext(), aliases=aliases[1:]
+        )
         return topic
 
     def visit_title(self, node: Element):
@@ -267,21 +265,20 @@ class HyperHelpTranslator(TextTranslator):
     def depart_title(self, node: Element):
         pass
 
-    def uri2topic(self, node) -> Optional[str]:
+    def uri2external(self, node: Element) -> Optional[str]:
+        uri = node.get("refuri")
+        if not uri:
+            return None
+        topic = uri.split("://")[-1].strip("/")
+        # TODO? ping the uri to fetch page title and description ?
+        # TODO: prevent duplicate
+        self.builder.index.externals[uri] = HelpExternal(topic, uri, caption=uri)
+        return topic
+
+    def uri2topic(self, node: Element) -> Optional[str]:
         # Replace 'refuri' in reference with HTTP address, if possible
         # None for no possible address
         uri = node.get("refuri")
-
-        external = not node.get("internal", False)
-        if external:
-            if not uri:
-                return None
-            topic = uri.split("://")[-1].strip("/")
-            # TODO? ping the uri to fetch page title and description ?
-            # TODO: prevent duplicate
-            self.builder.index.externals[uri] = HelpExternal(uri, topic, uri)
-            return topic
-
         if uri:
             # this is a global ID
             if uri.startswith("#"):
@@ -303,8 +300,13 @@ class HyperHelpTranslator(TextTranslator):
         return topic
 
     def visit_reference(self, node: Element):
+        external = not node.get("internal", False)
+        if external:
+            topic = self.uri2external(node)
+        else:
+            topic = self.uri2topic(node)
+
         # If no target possible, pass through.
-        topic = self.uri2topic(node)
         if topic is None:
             return
         text = "".join((c.astext() for c in node.children)).replace("|", "/")
