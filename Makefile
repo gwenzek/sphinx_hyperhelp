@@ -49,7 +49,7 @@ repos/$(TARGET_NAME):
 
 clean:
 	rm -r build/$(TARGET_NAME)
-	rm "$(ST_PACKAGES)/$(TARGET_NAME)"
+	[[ ! -f "$(ST_PACKAGES)/$(TARGET_NAME)" ]] || rm "$(ST_PACKAGES)/$(TARGET_NAME)"
 
 
 # Command for developers working on sphinx_hyperhelp

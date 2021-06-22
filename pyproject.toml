@@ -5,6 +5,7 @@ description = "Builder for Sphinx documentation, to the HyperHelp format, for Su
 authors = ["Guillaume Wenzek"]
 license = "BSD-3-Clause"
 readme = "README.md"
+repository = "https://github.com/gwenzek/sphinx_hyperhelp"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -37,10 +38,10 @@ profile = "black"
 src_paths = ["tests", "sphinx_hyperhelp"]
 
 [tool.mypy]
-python_version = 3.8
+python_version = 3.9
 files = "tests/**/*.py,sphinx_hyperhelp/**/*.py"
 check_untyped_defs = true
 show_error_codes = true
-ignore_missing_imports = true
+ignore_missing_imports = false
 warn_redundant_casts = true
 warn_unused_configs = true

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterator, Set, Tuple
@@ -124,15 +126,13 @@ class HyperHelpBuilder(TextBuilder):
     def add_topic(
         self, topic: str, caption: str = "", aliases: list[str] = []
     ) -> HelpTopic:
-        if not caption:
-            caption = topic
-
+        caption = caption or topic
         target = self.get_target_uri(self.current_docname)
         more_aliases = ["/".join((target, topic))]
         for alias in aliases:
             more_aliases.append("/".join((target, alias)))
 
-        help_topic = HelpTopic(topic, caption=topic, aliases=aliases + more_aliases)
+        help_topic = HelpTopic(topic, caption=caption, aliases=aliases + more_aliases)
         self.current_helpfile.topics.append(help_topic)
         return help_topic
 

@@ -7,6 +7,7 @@ from sphinx.application import Sphinx
 from sphinx_hyperhelp import HelpTopic
 from sphinx_hyperhelp.help_writer import TopicRef
 
+from . import utils
 from .utils import build_file, build_file_and_doctree
 
 
@@ -25,8 +26,9 @@ def test_links(app):
 
     assert "default namespace" in help_file
     urls = set(help_index["externals"].keys())
-    assert urls == {w3_url, conf_url}
-    # "https://www.duckduckgo.com/image.png",
+    assert urls == {w3_url}
+    # TODO: local file: conf_url
+    # TODO: image "https://www.duckduckgo.com/image.png",
     w3_topic = help_index["externals"][w3_url][1]["topic"]
     assert w3_topic == "www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting"
     assert f"|:{w3_topic}:default namespace|" in help_file
@@ -92,14 +94,14 @@ def test_todo(app):
 def test_uri2topic(app):
     # TODO: the most important things to check is that topic generated when
     # reading the title and when reading the reference are consistent
-    rst_file = """
-.. _dev-deprecated-apis:
+    rst_file = """.. _dev-deprecated-apis:
+
 Deprecated APIs
 ===============
 
 :ref:`lot of deprecated apis <dev-deprecated-apis>`
     """
-    _, _, doctree, translator = build_file_and_doctree(app, rst_file)
+    _, help_index, doctree, translator = build_file_and_doctree(app, rst_file)
 
     translator.visit_document(doctree)
     title = doctree[1][0]
@@ -111,8 +113,14 @@ Deprecated APIs
     topic_from_ref = translator.uri2topic(ref)
 
     assert topic_from_title and topic_from_ref
-    # TODO: We don't need exact equality here
-    assert topic_from_ref == topic_from_title
+
+    index_topics = help_index["help_files"]["index.txt"][1:]
+    topic_from_index = HelpTopic.from_json(
+        utils.unique(lambda x: x["topic"] == "deprecated-apis", index_topics)
+    )
+
+    assert topic_from_title in topic_from_index
+    assert topic_from_ref in topic_from_index
 
 
 def test_topic_title(app):
@@ -129,7 +137,9 @@ On developing Sphinx, we are always careful to the compatibility of our APIs.
     topics = help_index["help_files"]["index.txt"][1:]
 
     assert len(topics) == 1
-    assert "dev-deprecated-apis" in HelpTopic.from_json(topics[0])
+    topic_from_index = HelpTopic.from_json(topics[0])
+    assert "dev-deprecated-apis" in topic_from_index
+    assert topic_from_index.caption == "Deprecated APIs"
 
 
 def test_docref(app):
@@ -168,5 +178,5 @@ Windows
 -------
 """
     help_file, _ = build_file(app, rst_file)
-    assert "* |:overview: Overview|" in help_file
-    assert "* |:linux: Linux|" in help_file
+    assert "* |:overview:Overview|" in help_file
+    assert "* |:linux:Linux|" in help_file

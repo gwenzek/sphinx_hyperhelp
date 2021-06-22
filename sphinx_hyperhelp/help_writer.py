@@ -226,10 +226,9 @@ class HyperHelpTranslator(TextTranslator):
         if any(alias in DEBUG_TOPICS for alias in parent["ids"]):
             breakpoint()
 
-        # TODO add a proper caption
         topic, aliases = parent["ids"][0], parent["ids"][1:]
         help_topic = self.builder.add_topic(
-            topic, caption=node.astext(), aliases=aliases[1:]
+            topic, caption=node.astext(), aliases=aliases
         )
         return topic
 
@@ -299,12 +298,26 @@ class HyperHelpTranslator(TextTranslator):
         assert "#" not in topic
         return topic
 
-    def visit_reference(self, node: Element):
-        external = not node.get("internal", False)
-        if external:
-            topic = self.uri2external(node)
+    def visit_reference(self, node: Element) -> None:
+        if "internal" in node:
+            internal = node["internal"]
+        elif "refuri" in node:
+            # Not all nodes have the "internal" field set
+            external = (
+                node["refuri"].startswith("https://")
+                or node["refuri"].startswith("http://")
+                or node["refuri"].startswith("mailto@")
+            )
+            internal = not external
+        elif "refid" in node:
+            internal = True
         else:
+            assert False, f"Invalid reference node: {node} ({node.attributes})"
+
+        if internal:
             topic = self.uri2topic(node)
+        else:
+            topic = self.uri2external(node)
 
         # If no target possible, pass through.
         if topic is None:
