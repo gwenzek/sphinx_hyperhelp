@@ -21,6 +21,8 @@ def test_links(app):
 * `Example valid local file <{conf_url}>`_
 
 .. image:: https://www.duckduckgo.com/image.png
+
+* Monkey D. Luffy <monkey.d.luffy@one.piece>
 """
     help_file, help_index = build_file(app, rst_file)
 
@@ -32,6 +34,10 @@ def test_links(app):
     w3_topic = help_index["externals"][w3_url][1]["topic"]
     assert w3_topic == "www.w3.org/TR/2006/REC-xml-names-20060816/#defaulting"
     assert f"|:{w3_topic}:default namespace|" in help_file
+
+    # Hyperhelp doesn't support "mailto" targets
+    assert "mailto:" not in help_file
+    assert "* Monkey D. Luffy <monkey.d.luffy@one.piece>" in help_file
 
 
 ALABSTER_THEME = (

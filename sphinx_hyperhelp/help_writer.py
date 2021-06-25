@@ -320,6 +320,8 @@ class HyperHelpTranslator(TextTranslator):
         uri = node.get("refuri")
         if not uri:
             return None
+        if uri.startswith("mailto:"):
+            return None
         topic = uri.split("://")[-1].strip("/")
         # TODO? ping the uri to fetch page title and description ?
         # TODO: prevent duplicate
@@ -358,7 +360,7 @@ class HyperHelpTranslator(TextTranslator):
             external = (
                 node["refuri"].startswith("https://")
                 or node["refuri"].startswith("http://")
-                or node["refuri"].startswith("mailto@")
+                or node["refuri"].startswith("mailto:")
             )
             internal = not external
         elif "refid" in node:
