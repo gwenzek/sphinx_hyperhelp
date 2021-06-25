@@ -72,6 +72,10 @@ class HyperHelpBuilder(TextBuilder):
             for help_topic in hf.topics
         ]
         resolved_topics: dict[str, str] = {}
+        # files are they own topics
+        for file in self.index.help_files.keys():
+            resolved_topics[file] = file
+
         conflicts_set: dict[str, set[str]] = defaultdict(set)
         for file, help_topic in all_topics:
             topic = help_topic.topic

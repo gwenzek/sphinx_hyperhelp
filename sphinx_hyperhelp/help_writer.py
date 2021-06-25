@@ -263,6 +263,7 @@ class HyperHelpTranslator(TextTranslator):
             date = datetime.today()
             self.helpfile.add_description(title)
             self.head.append(f'%hyperhelp title="{title}" date="{date:%Y-%m-%d}"')
+            # TODO: this should not be collapsed with the upcoming title
             self.add_anchor(topic)
             raise nodes.SkipNode
 
