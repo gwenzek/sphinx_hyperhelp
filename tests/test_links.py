@@ -180,3 +180,20 @@ Windows
     help_file, _ = build_file(app, rst_file)
     assert "* |:overview:Overview|" in help_file
     assert "* |:linux:Linux|" in help_file
+
+
+def test_anchor_without_title(app):
+    rst_file = """
+Heading
+=======
+
+.. _anchor-without-title:
+
+On developing Sphinx, we are always careful to the compatibility of our APIs.
+"""
+    _, help_index = build_file(app, rst_file)
+    topics = help_index["help_files"]["index.txt"][1:]
+
+    assert len(topics) == 2
+    topic_from_index = HelpTopic.from_json(topics[-1])
+    assert "anchor-without-title" == topic_from_index.topic

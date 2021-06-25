@@ -117,7 +117,7 @@ class HyperHelpBuilder(TextBuilder):
 
     def write_doc(self, docname: str, doctree: Node) -> None:
         assert docname
-        self.current_helpfile = HelpFile(docname)
+        self.current_helpfile = HelpFile()
         target = self.get_target_uri(docname)
         self.index.help_files[target] = self.current_helpfile
 

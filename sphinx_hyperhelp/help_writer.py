@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
+import sphinx.addnodes
 from docutils import nodes
 from docutils.nodes import Element, Node, Text
 from sphinx.writers.text import TextTranslator, TextWriter
@@ -46,6 +47,14 @@ class TopicRef(str):
 
     def strip(self, chars: str = None) -> TopicRef:
         return self
+
+
+ANCHOR_NODES = (
+    nodes.section,
+    nodes.term,
+    sphinx.addnodes.desc_signature,
+    nodes.definition_list,
+)
 
 
 class HyperHelpTranslator(TextTranslator):
@@ -195,6 +204,8 @@ class HyperHelpTranslator(TextTranslator):
             self.add_text("*")
         super().depart_desc_signature(node)
 
+    visit_term = visit_desc_signature
+    depart_term = depart_desc_signature
     visit_definition_list = visit_desc_signature
     depart_definition_list = depart_desc_signature
 
@@ -252,8 +263,7 @@ class HyperHelpTranslator(TextTranslator):
             date = datetime.today()
             self.helpfile.add_description(title)
             self.head.append(f'%hyperhelp title="{title}" date="{date:%Y-%m-%d}"')
-            if topic:
-                self.add_text(f"*|{topic}:⚓|*\n")
+            self.add_anchor(topic)
             raise nodes.SkipNode
 
         if topic:
@@ -261,7 +271,48 @@ class HyperHelpTranslator(TextTranslator):
         else:
             self.add_text(f"{lvl * '#'} ")
 
+    def add_anchor(self, topic: str | None) -> None:
+        if topic:
+            self.add_text(f"*|{topic}:⚓|*\n")
+
     def depart_title(self, node: Element):
+        pass
+
+    def dispatch_visit(self, node: Node) -> None:
+        if isinstance(node, Element):
+            self.detect_isolated_target(node)
+
+        super().dispatch_visit(node)
+
+    def detect_isolated_target(self, node: Element) -> None:
+        """Detect isolated <target> nodes, and mark them.
+
+        The actual anchor will be generated later during visit_target
+        Most <target> nodes are preceding a title
+        and we don't need to generate an extra anchor.
+        """
+        n = len(node.children)
+        for i, target in enumerate(node.children):
+            if not isinstance(target, nodes.target):
+                continue
+            if not target.get("refid"):
+                continue
+            isolated = True
+            if i + 1 < n:
+                sibling = node.children[i + 1]
+                if isinstance(sibling, ANCHOR_NODES):
+                    isolated = False
+            target.attributes["isolated"] = isolated
+
+    def visit_target(self, node: Element) -> None:
+        isolated = node.get("isolated", False)
+        if not isolated:
+            raise nodes.SkipNode
+        topic = node["refid"]
+        self.builder.add_topic(topic)
+        self.add_anchor(topic)
+
+    def depart_target(self, node: Element) -> None:
         pass
 
     def uri2external(self, node: Element) -> Optional[str]:
