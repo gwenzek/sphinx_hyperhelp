@@ -38,7 +38,7 @@ build/$(TARGET_NAME)/hyperhelp: repos/$(TARGET_NAME)
 build_html: build/$(TARGET_NAME)/html
 
 build/$(TARGET_NAME)/html: repos/$(TARGET_NAME)
-	python -m sphinx -P -b html $</doc $@
+	poetry run python -m sphinx -P -b html $</doc $@
 
 # TODO: This should replace build command once it's feature equivalent
 py_build:

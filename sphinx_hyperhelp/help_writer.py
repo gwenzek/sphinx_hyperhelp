@@ -24,7 +24,7 @@ logger.setLevel(logging.DEBUG)
 DEBUG_DOCS: list[str] = []
 DEBUG_TOPICS: list[str] = []
 # DEBUG_DOCS = ["usage/restructuredtext/domains"]
-# DEBUG_TOPICS = ["cross-referencing-python-objects"]
+# DEBUG_TOPICS = ["cross-referencing-syntax"]
 
 
 def long_re(**named_parts: str):
@@ -66,7 +66,8 @@ class HyperHelpTranslator(TextTranslator):
         self.maxwidth = 80
         lcode = settings.language_code
 
-        # Lookup table to get section list from name
+        # Inspired from LaTeXTranslator, handle the first title as document title.
+        self.title_found = False
         self.head: list[str] = []
         self.foot: list[str] = []
         self.body = ""
@@ -227,6 +228,11 @@ class HyperHelpTranslator(TextTranslator):
 
     depart_doctest_block = depart_literal_block
 
+    def visit_section(self, node: Element) -> None:
+        if self.title_found:
+            # Don't treat the first section as a section
+            super().visit_section(node)
+
     def add_title_as_topic(self, node: Element) -> Optional[str]:
         assert self.helpfile
         parent = node.parent
@@ -243,38 +249,43 @@ class HyperHelpTranslator(TextTranslator):
         )
         return topic
 
-    def visit_title(self, node: Element):
+    def visit_title(self, node: Element) -> None:
         # Note: not calling super
         if isinstance(node.parent, nodes.Admonition):
             self.add_text(node.astext() + ": ")
             raise nodes.SkipNode
+        elif isinstance(node.parent, nodes.section) and not self.title_found:
+            return self.visit_document_title(node)
 
-        title = node.children[0].astext().replace('"', "")
-
-        # TODO: understand how this incremented / decremented
         lvl = self.sectionlevel
-        if lvl == 0:
-            breakpoint()
-
         topic = self.add_title_as_topic(node)
-        if lvl == 1 and not self.helpfile.description:
-            # Document heading
-            # TODO: use git/file date ?
-            date = datetime.today()
-            self.helpfile.add_description(title)
-            self.head.append(f'%hyperhelp title="{title}" date="{date:%Y-%m-%d}"')
-            # TODO: this should not be collapsed with the upcoming title
-            self.add_anchor(topic)
-            raise nodes.SkipNode
-
         if topic:
-            self.add_text(f"{lvl * '#'} {topic}: ")
+            self.add_text(f"{lvl * '#'} {topic}:")
         else:
             self.add_text(f"{lvl * '#'} ")
 
-    def add_anchor(self, topic: str | None) -> None:
+    def visit_document_title(self, node: Element) -> None:
+        """Treats the first title as a document title.
+
+        Inspired from the LaTeXTranslator.
+        """
+        assert not self.title_found
+        assert not self.helpfile.description
+        # TODO: use git/file date ?
+        title = node.children[0].astext().replace('"', "")
+        date = datetime.today()
+        self.helpfile.add_description(title)
+        self.head.append(f'%hyperhelp title="{title}" date="{date:%Y-%m-%d}"\n')
+        # TODO: this should not be collapsed with the upcoming title
+        topic = self.add_title_as_topic(node)
         if topic:
-            self.add_text(f"*|{topic}:⚓|*\n")
+            self.head.append(self.make_anchor(topic))
+
+        self.title_found = True
+        raise nodes.SkipNode
+
+    def make_anchor(self, topic: str) -> str:
+        return f"*|{topic}:⚓|*\n"
 
     def depart_title(self, node: Element):
         pass
@@ -296,7 +307,7 @@ class HyperHelpTranslator(TextTranslator):
         for i, target in enumerate(node.children):
             if not isinstance(target, nodes.target):
                 continue
-            if not target.get("refid"):
+            if not target.get("ids") and not target.get("refid"):
                 continue
             isolated = True
             if i + 1 < n:
@@ -309,9 +320,10 @@ class HyperHelpTranslator(TextTranslator):
         isolated = node.get("isolated", False)
         if not isolated:
             raise nodes.SkipNode
-        topic = node["refid"]
-        self.builder.add_topic(topic)
-        self.add_anchor(topic)
+        topic = node.get("refid") or node["ids"][0]
+        if topic:
+            self.builder.add_topic(topic)
+            self.add_text(self.make_anchor(topic))
 
     def depart_target(self, node: Element) -> None:
         pass

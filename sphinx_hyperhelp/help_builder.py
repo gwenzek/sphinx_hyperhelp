@@ -35,6 +35,7 @@ class HyperHelpBuilder(TextBuilder):
     index: HelpIndex = None  # type: ignore
     links: dict[str, str] = {}
     _translator: HyperHelpTranslator = None  # type: ignore
+    _resolved_topics: dict[str, str] = {}  # uri to file
 
     def prepare_writing(self, docnames):
         self.writer = HyperHelpWriter(self)
@@ -45,6 +46,9 @@ class HyperHelpBuilder(TextBuilder):
         # )
         self.index = HelpIndex(config.project, description, Path(self.outdir))
         self.links = {}
+        # TODO: StandaloneHTMLBuilder creates an index page for each html_domain_indices.
+        # See eg: https://www.sphinx-doc.org/en/master/py-modindex.html
+        # I think we should add this to HyperHelp.
 
     # TODO: edit reload existing index, and override get_outdated_docs
     # to keep unchanged files in the index
@@ -83,7 +87,7 @@ class HyperHelpBuilder(TextBuilder):
             if conflict:
                 conflicts_set[topic].add(conflict)
                 conflicts_set[topic].add(file)
-                continue
+
             resolved_topics[topic] = file
             for alias in help_topic.aliases:
                 resolved_topics[alias] = file
@@ -132,8 +136,18 @@ class HyperHelpBuilder(TextBuilder):
     ) -> HelpTopic:
         caption = caption or topic
         target = self.get_target_uri(self.current_docname)
-        more_aliases = ["/".join((target, topic))]
-        for alias in aliases:
+        conflict = self._resolved_topics.get(topic)
+        if conflict:
+            # TODO: We actually have a lot of conflict because we generate topic
+            # for each title. Some of those titles are never referenced, or are
+            # referenced only in ToC.
+            # We should try to use more precise uri for ToC and generate less aliases.
+            # logger.warning(f"conflict for topic {topic} (from files {target} and {conflict}")
+            pass
+
+        more_aliases = []
+        for alias in [topic] + aliases:
+            self._resolved_topics[alias] = target
             more_aliases.append("/".join((target, alias)))
 
         help_topic = HelpTopic(topic, caption=caption, aliases=aliases + more_aliases)

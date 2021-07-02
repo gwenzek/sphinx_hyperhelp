@@ -79,10 +79,11 @@ but with a `__future__.annotations` to get nicer type hints.
 
 ## Todo list
 
-* fix broken links (currently 48 unresolved topics, 6 ambiguous out of 953 links)
+* fix broken links (currently 1 unresolved topics, 6 ambiguous out of 948 links)
 * ensure links are surrounded by spaces
 * incremental compilation 
 * create a table of contents for HyperHelp, by parsing the `root_doc`
+* remove empty lines in table of content
 
 ## Crazy ideas
 

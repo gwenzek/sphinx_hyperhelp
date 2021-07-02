@@ -203,3 +203,23 @@ On developing Sphinx, we are always careful to the compatibility of our APIs.
     assert len(topics) == 2
     topic_from_index = HelpTopic.from_json(topics[-1])
     assert "anchor-without-title" == topic_from_index.topic
+
+
+def test_anchor_in_paragraph(app):
+    rst_file = """
+Configuration
+=============
+
+The Japanese support has these options:
+
+:type:
+  _`type` is dotted module path string to specify Splitter implementation
+
+html_search_options for Japanese is re-organized and any custom splitter
+can be used by `type`_ settings.
+"""
+    _, help_index, doctree, translator = build_file_and_doctree(app, rst_file)
+    topics = help_index["help_files"]["index.txt"][1:]
+    assert len(topics) == 2
+    assert topics[0]["topic"] == "configuration"
+    assert topics[1]["topic"] == "type"
