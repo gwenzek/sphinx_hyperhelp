@@ -76,7 +76,7 @@ class HyperHelpTranslator(TextTranslator):
 
     def visit_document(self, node: Element) -> None:
         super().visit_document(node)
-        print(node["source"])
+        logger.debug(f"Visiting: {node['source']}")
         assert self.helpfile is None
         self.helpfile = self.builder.current_helpfile
         self.builder._doctree = node
