@@ -21,14 +21,20 @@ Some of the code is only a slight modification of Sphinx.
 
 * Install this repository: `pip install sphinx_hyperhelp`
 
-* Run `sphinx_hyperhelp --help` for help
+* Run `sphinx_hyperhelp --help` for help.
 
-* Run `sphinx_hyperhelp --name Sphinx --repo https://github.com/sphinx-doc/sphinx.git`
-  If it succeeds it will open the Sphinx documentation inside Sublime Text
+* Run `sphinx_hyperhelp --name PythonDocs`
+  If it succeeds it will open the Python documentation inside Sublime Text.
+
+* You can build any other project documentation with: `sphinx_hyperhelp --name NAME --repo GIT_URI`
+`NAME` will be the name of the documentation for Sublime Text.
+`GIT_URI` looks like "https://github.com/sphinx-doc/sphinx.git", 
+it must be a valid target for `git clone`.
 
 * You can also use the `sphinx` command line itself
 and chose `hyperhelp` as the output format.
 You'll need to move yourself the generated folder to ST Packages folder.
+eg: `python -m sphinx -P -b hyperhelp cpython/doc Packages/PythonDocs`
 
 
 ## How-to ?
@@ -79,11 +85,10 @@ but with a `__future__.annotations` to get nicer type hints.
 
 ## Todo list
 
-* fix broken links (currently 1 unresolved topics, 6 ambiguous out of 948 links)
-* ensure links are surrounded by spaces
 * incremental compilation 
 * create a table of contents for HyperHelp, by parsing the `root_doc`
 * remove empty lines in table of content
+* integration with readthedocs.io ?
 
 ## Crazy ideas
 
