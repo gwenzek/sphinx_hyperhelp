@@ -1,15 +1,14 @@
 # from __future__ import annotations
 # TODO: func_argparse doesn't work with python 3.10
 
+import json
 import os
 import subprocess
 import sys
 from pathlib import Path
-
+from typing import Union
 
 import func_argparse
-import json
-from typing import Union
 
 BUILD_DIR = Path(__file__).parent.parent / "build"
 REPOS_DIR = Path(__file__).parent.parent / "repos"
@@ -48,19 +47,6 @@ def download(name: str, repo: str = "", tag: str = "") -> Path:
     return srcdir
 
 
-def show_unresolved_diff(unresolved: Path, unresolved_prev: Path) -> None:
-    count = len(unresolved.read_text().splitlines())
-    if not unresolved_prev.exists():
-        unresolved_prev.write_text("")
-    prev_count = len(unresolved_prev.read_text().splitlines())
-    # unresolved_diff = subprocess.check_output(
-    #     ["diff", unresolved, unresolved_prev], text=True
-    # )
-    # short_diff = "\n".join(unresolved_diff.splitlines()[:10])
-    print(f"Went from {prev_count} to {count} unresolved links. Diff:")
-    # print(short_diff)
-
-
 def build(name: str, repo: str = "", tag: str = "") -> Path:
     """Builds a Sphinx projects documentation into a Sublime Text package.
 
@@ -74,16 +60,10 @@ def build(name: str, repo: str = "", tag: str = "") -> Path:
     assert docdir.exists(), f"No documentation folder found at {docdir}"
     outdir = BUILD_DIR / name / "hyperhelp"
 
-    unresolved = outdir / "unresolved.txt"
-    unresolved_prev = outdir / "unresolved_prev.txt"
-    if unresolved.exists():
-        unresolved.rename(unresolved_prev)
-
     sphinx_cmd: list[Union[str, Path]] = [sys.executable, "-m", "sphinx", "-P"]
     sphinx_cmd += ["-b=hyperhelp", srcdir / "doc", outdir]
     subprocess.run(sphinx_cmd, check=True)
 
-    show_unresolved_diff(unresolved, unresolved_prev)
     package_dir = resolve_subl() / name
     if package_dir.exists():
         if package_dir.resolve() != outdir.parent:

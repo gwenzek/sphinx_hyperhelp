@@ -35,7 +35,7 @@ testpaths = ["tests"]
 
 [tool.isort]
 profile = "black"
-src_paths = ["tests", "sphinx_hyperhelp"]
+skip_gitignore = true
 
 [tool.mypy]
 python_version = 3.9

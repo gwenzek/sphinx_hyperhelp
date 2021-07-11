@@ -19,30 +19,13 @@ all: test build
 
 build: build/$(TARGET_NAME)/hyperhelp
 
-build/$(TARGET_NAME)/hyperhelp: repos/$(TARGET_NAME)
-	[ ! -f $@/unresolved.txt ] || mv -f $@/unresolved.txt $@/unresolved_prev.txt
-	poetry run python -m sphinx -P -b hyperhelp $</doc $(@)
-	# DEBUG: Changes in unresolved links:
-	diff $@/unresolved.txt $@/unresolved_prev.txt | head
-
-	# Adding $(TARGET_NAME) to ST Packages.
-	if [ -h "$(ST_PACKAGES)/$(TARGET_NAME)" ]; then \
-		[[ `realpath $(@D)` = `realpath "$(ST_PACKAGES)/$(TARGET_NAME)"` ]] || \
-		echo "!!! $(ST_PACKAGES)/$(TARGET_NAME) already exists !!!" ; \
-	else \
-		ln -sih `realpath $(@D)` "$(ST_PACKAGES)/$(TARGET_NAME)"; \
-	fi;
-
-	subl --command 'hyperhelp_topic {"package": "$(TARGET_NAME)", "topic": "contents.txt"}'
+build/$(TARGET_NAME)/hyperhelp:
+	poetry run sphinx_hyperhelp --name $(TARGET_NAME) --repo $(TARGET_REPO) --tag $(TARGET_VERSION)
 
 build_html: build/$(TARGET_NAME)/html
 
 build/$(TARGET_NAME)/html: repos/$(TARGET_NAME)
 	poetry run python -m sphinx -P -b html $</doc $@
-
-# TODO: This should replace build command once it's feature equivalent
-py_build:
-	poetry run sphinx_hyperhelp --name $(TARGET_NAME) --repo $(TARGET_REPO) --tag $(TARGET_VERSION)
 
 repos/$(TARGET_NAME):
 	git clone --depth 2 --branch $(TARGET_VERSION) $(TARGET_REPO) $@
