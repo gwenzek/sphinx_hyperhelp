@@ -7,7 +7,7 @@ from typing import Any, NamedTuple
 
 class HelpTopic(NamedTuple):
     topic: str
-    caption: str
+    caption: str = ""
     aliases: list[str] = []
 
     def as_json(self) -> dict:
@@ -25,11 +25,11 @@ class HelpTopic(NamedTuple):
 
 
 class HelpFile:
-    def __init__(self, description: str = ""):
+    def __init__(self, description: str = "", topics: list[HelpTopic] = []):
         self.description = description
-        self.topics: list[HelpTopic] = []
-        self.sources: dict[str, HelpFile] = {}
-        self.toctree: list[Path] = []
+        self.topics: list[HelpTopic] = topics or []
+        # self.sources: dict[str, HelpFile] = {}
+        # self.toctree: list[Path] = []
 
     def __repr__(self) -> str:
         return f"HelpFile({self.description!r})"
@@ -88,3 +88,36 @@ class HelpIndex(NamedTuple):
 
     def path(self) -> Path:
         return self.doc_root / "hyperhelp.json"
+
+    def prune(self, keep_topics: set[str]) -> HelpIndex:
+        good_help_files = {}
+        for filename, help_file in self.help_files.items():
+            good_help_files[filename] = prune_file(help_file, keep_topics)
+        return HelpIndex(
+            self.package,
+            self.description,
+            self.doc_root,
+            good_help_files,
+            self.externals,
+        )
+
+
+def prune_topic(self: HelpTopic, keep_topics: set[str]) -> HelpTopic | None:
+    aliases = [a for a in self.aliases if a in keep_topics]
+    if self.topic in keep_topics:
+        return HelpTopic(self.topic, self.caption, aliases)
+    elif aliases:
+        # The main topic need to be pruned, promote an alias
+        return HelpTopic(aliases[0], self.caption, aliases[1:])
+    else:
+        # This topic isn't referenced at all
+        return None
+
+
+def prune_file(self: HelpFile, keep_topics: set[str]) -> HelpFile:
+    good_topics = []
+    for topic in self.topics:
+        good_topic = prune_topic(topic, keep_topics)
+        if good_topic is not None:
+            good_topics.append(good_topic)
+    return HelpFile(self.description, good_topics)

@@ -64,8 +64,10 @@ class HyperHelpBuilder(TextBuilder):
         return self.get_target_uri(to, typ)
 
     def finish(self) -> None:
-        self.index.save()
+        if self.config.hyperhelp_prune_topics:
+            self.index = self.index.prune(set(self.links.keys()))
         valid = self.validate()
+        self.index.save()
         if not valid:
             logger.error("The index seems invalid, some topics may be missing")
 
@@ -121,6 +123,7 @@ class HyperHelpBuilder(TextBuilder):
 
         # TODO: also validate the index:
         # https://github.com/STealthy-and-haSTy/hyperhelpcore/blob/master/all/hyperhelpcore/index_validator.py
+        # Notably we should remove aliases that aren't used in practices.
         return valid
 
     def write_doc(self, docname: str, doctree: Node) -> None:
@@ -158,10 +161,7 @@ class HyperHelpBuilder(TextBuilder):
 def setup(app: Sphinx) -> Dict[str, Any]:
     app.add_builder(HyperHelpBuilder)
 
-    # app.add_config_value("text_sectionchars", '*=-~"+`', "env")
-    # app.add_config_value("text_newlines", "unix", "env")
-    # app.add_config_value("text_add_secnumbers", True, "env")
-    # app.add_config_value("text_secnumber_suffix", ". ", "env")
+    app.add_config_value("hyperhelp_prune_topics", True, "env", str)
 
     return {
         "version": "builtin",

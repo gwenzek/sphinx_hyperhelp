@@ -26,7 +26,13 @@ def app(monkeypatch, tmp_path: Path) -> Iterator[Sphinx]:
     conf_file = tmp_path / "conf.py"
     if not conf_file.exists():
         conf_file.write_text("")
-    app = sphinx.testing.util.SphinxTestApp("hyperhelp", srcdir=SphinxPath(tmp_path))
+    app = sphinx.testing.util.SphinxTestApp(
+        "hyperhelp",
+        srcdir=SphinxPath(tmp_path),
+        # Disable pruning topic, to not force us to reference all topics in tests.
+        # pruning is tested in test_hyperhelp.py
+        confoverrides={"hyperhelp_prune_topics": False},
+    )
     try:
         yield app
     finally:
