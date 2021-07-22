@@ -75,29 +75,31 @@ def install(name: str, repo: str = "", tag: str = "", outdir: Path = None) -> Pa
     outdir = build(name, repo, tag, outdir)
     package_dir = resolve_subl() / name
     if package_dir.exists():
-        if package_dir.resolve() != outdir:
+        if package_dir.resolve() != outdir.resolve():
             raise Exception(
                 f"Sublime Text Package {name} already exists at {package_dir}"
             )
     else:
         # TODO: should we directly generate the files there instead ?
         package_dir.link_to(outdir)
-    # TODO: trigger help reload ?
-    # `HyperHelpAuthor: reload index`
-    hyperhelp_topic_args = {"package": name, "topic": "contents.txt"}
+    _run_subl_command("hyperhelp_author_reload_index_by_name", package=name)
     logger.info(f"Will try to open documentation {name} in Sublime Text.")
-    subprocess.run(
-        [
-            "subl",
-            "--command",
-            "hyperhelp_topic " + json.dumps(hyperhelp_topic_args),
-        ]
-    )
+    _run_subl_command("hyperhelp_topic", package=name, topic="contents.txt")
     logger.info(f"Installed Package {name} to {package_dir}.")
     return package_dir
 
 
-def _dispatch(name: str, repo: str = "", tag: str = "", outdir: Path = None, action: str="install") -> None:
+def _run_subl_command(command, **args):
+    subprocess.run(["subl", "--command", " ".join((command, json.dumps(args)))])
+
+
+def _dispatch(
+    name: str,
+    repo: str = "",
+    tag: str = "",
+    outdir: Path = None,
+    action: str = "install",
+) -> None:
     """Builds a Sphinx projects documentation and install it as a Sublime Text package.
 
     - name: name of the output ST package
@@ -108,9 +110,11 @@ def _dispatch(name: str, repo: str = "", tag: str = "", outdir: Path = None, act
     - action: install/build/download
     """
     actions = {fn.__name__: fn for fn in [install, build, download]}
-    assert action in actions, f"Unknown action {action!r}, chose from {set(actions.keys())}"
+    if action not in actions:
+        raise ValueError(f"Unknown action {action!r}, chose from {set(actions.keys())}")
 
     actions[action](name, repo, tag, outdir)  # type: ignore
+
 
 def main():
     func_argparse.single_main(_dispatch)
