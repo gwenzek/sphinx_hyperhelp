@@ -2,6 +2,7 @@
 # TODO: func_argparse doesn't work with python 3.10
 
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -10,8 +11,10 @@ from typing import Union
 
 import func_argparse
 
-BUILD_DIR = Path(__file__).parent.parent / "build"
-REPOS_DIR = Path(__file__).parent.parent / "repos"
+logger = logging.getLogger("sphinx_hyperhelp")
+
+BUILD_DIR = Path(".") / "build"
+REPOS_DIR = Path(".") / "repos"
 
 # TODO: can we do better to distribute packages ?
 FAMOUS_REPOS = {
@@ -47,7 +50,7 @@ def download(name: str, repo: str = "", tag: str = "") -> Path:
     return srcdir
 
 
-def build(name: str, repo: str = "", tag: str = "") -> Path:
+def build(name: str, repo: str = "", tag: str = "", outdir: Path = None) -> Path:
     """Builds a Sphinx projects documentation into a Sublime Text package.
 
     - name: name of the output ST package
@@ -58,22 +61,31 @@ def build(name: str, repo: str = "", tag: str = "") -> Path:
     srcdir = download(name, repo, tag)
     docdir = srcdir / "doc"
     assert docdir.exists(), f"No documentation folder found at {docdir}"
-    outdir = BUILD_DIR / name / "hyperhelp"
+    outdir = outdir or BUILD_DIR / name
 
     sphinx_cmd: list[Union[str, Path]] = [sys.executable, "-m", "sphinx", "-P"]
-    sphinx_cmd += ["-b=hyperhelp", srcdir / "doc", outdir]
+    sphinx_cmd += ["-b=hyperhelp", srcdir / "doc", outdir / "hyperhelp"]
     subprocess.run(sphinx_cmd, check=True)
+    logger.info(f"Build Package {name} to {outdir}")
 
+    return outdir
+
+
+def install(name: str, repo: str = "", tag: str = "", outdir: Path = None) -> Path:
+    outdir = build(name, repo, tag, outdir)
     package_dir = resolve_subl() / name
     if package_dir.exists():
-        if package_dir.resolve() != outdir.parent:
+        if package_dir.resolve() != outdir:
             raise Exception(
                 f"Sublime Text Package {name} already exists at {package_dir}"
             )
     else:
-        package_dir.link_to(outdir.parent)
+        # TODO: should we directly generate the files there instead ?
+        package_dir.link_to(outdir)
     # TODO: trigger help reload ?
+    # `HyperHelpAuthor: reload index`
     hyperhelp_topic_args = {"package": name, "topic": "contents.txt"}
+    logger.info(f"Will try to open documentation {name} in Sublime Text.")
     subprocess.run(
         [
             "subl",
@@ -81,8 +93,24 @@ def build(name: str, repo: str = "", tag: str = "") -> Path:
             "hyperhelp_topic " + json.dumps(hyperhelp_topic_args),
         ]
     )
-    return outdir
+    logger.info(f"Installed Package {name} to {package_dir}.")
+    return package_dir
 
+
+def _dispatch(name: str, repo: str = "", tag: str = "", outdir: Path = None, action: str="install") -> None:
+    """Builds a Sphinx projects documentation and install it as a Sublime Text package.
+
+    - name: name of the output ST package
+      Be careful to not create conflicts with other packages
+    - repo: git repository of the project to build documentation from
+    - tag: specific git tag/branch/commit to fetch. Defaults to the `master` branch of the repo.
+    - outdir: folder where to generate the documentation
+    - action: install/build/download
+    """
+    actions = {fn.__name__: fn for fn in [install, build, download]}
+    assert action in actions, f"Unknown action {action!r}, chose from {set(actions.keys())}"
+
+    actions[action](name, repo, tag, outdir)  # type: ignore
 
 def main():
-    func_argparse.single_main(build)
+    func_argparse.single_main(_dispatch)
